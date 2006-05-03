@@ -9,22 +9,25 @@ use Carp;
 
 =head1 NAME
 
-XML::MyXML - The new XML::MyXML!
+XML::MyXML - An easy and simple way to handle XML documents
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
-    use XML::MyXML qw(tidy_xml);
+    use XML::MyXML qw(tidy_xml xml_to_object);
 
-    my $xml = '<item><name>Table</name><price>10.00</price></item>';
+    my $xml = "<item><name>Table</name><price><usd>10.00</usd><eur>8.50</eur></price></item>";
     print tidy_xml($xml);
+
+    my $obj = xml_to_object($xml);
+    print "Price in Euros = " . $obj->path('price/eur')->value;
 
 =head1 EXPORT
 
@@ -64,6 +67,29 @@ sub decode {
 }
 
 
+=head2 tidy_xml($rawxml)
+
+Returns the XML string in a tidy format (with tabs & newlines)
+
+=cut
+
+
+sub tidy_xml {
+	my $xml = shift;
+
+	my $object = &xml_to_object($xml);
+	&tidy_object($object);
+	return &object_to_xml($object);
+}
+
+
+
+
+=head2 xml_to_object($rawxml)
+
+Creates an 'XML::MyXML::Object' object from the raw XML provided
+
+=cut
 
 sub xml_to_object {
 	my $xml = shift;
@@ -209,15 +235,6 @@ sub tidy_object {
 }
 
 
-sub tidy_xml {
-	my $xml = shift;
-
-	my $object = &xml_to_object($xml);
-	&tidy_object($object);
-	return &object_to_xml($object);
-}
-
-
 sub simple_to_xml {
 	my $arref = shift;
 
@@ -245,6 +262,10 @@ sub simple_to_xml {
 
 
 package XML::MyXML::Object;
+
+=head1 OBJECT METHODS
+
+=cut
 
 sub new {
 	my $class = shift;
@@ -275,6 +296,12 @@ sub children {
 	}
 }
 
+=head2 $obj->path("subtag1/subsubtag2/.../subsubsubtagX")
+
+Returns the tag specified by the path as an XML::MyXML::Object object. When there are more than one tags with the specified name in the last step of the path, it will return all of them as an array.
+
+=cut
+
 sub path {
 	my $self = shift;
 	my $path = shift;
@@ -288,6 +315,12 @@ sub path {
 	}
 	return wantarray ? $el->children($path[$#path]) : ($el->children($path[$#path]))[0];
 }
+
+=head2 $obj->value
+
+When the tag represented by the $obj object has only text contents, returns those contents as a string
+
+=cut
 
 sub value {
 	my $self = shift;
