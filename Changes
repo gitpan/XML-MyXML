@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.03	May 12th, 2006
+		Applied some encoding/decoding commands in several  functions
+
 0.01    May 3rd, 2006
         First version, released on an unsuspecting world.
 

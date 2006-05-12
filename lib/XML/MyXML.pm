@@ -2,22 +2,23 @@ package XML::MyXML;
 
 use warnings;
 use strict;
+use utf8;
+use Carp;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml);
-use Carp;
 
 =head1 NAME
 
-XML::MyXML - An easy and simple way to handle XML documents
+XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -37,7 +38,7 @@ tidy_xml, object_to_xml, xml_to_object, simple_to_xml
 
 =cut
 
-sub encode {
+sub _encode {
 	my $string = shift;
 	my %replace = 	(
 					'<' => '&lt;', 
@@ -51,7 +52,7 @@ sub encode {
 	return $string;
 }
 
-sub decode {
+sub _decode {
 	my $string = shift;
 	my %replace = 	(
 					'<' => '&lt;', 
@@ -153,7 +154,7 @@ sub xml_to_object {
 			push @{$pointer->{'content'}}, $entry;
 			$pointer = $entry;
 		} elsif ($el =~ /^[^<>]*$/) {
-			my $entry = { value => &decode($el), parent => $pointer };
+			my $entry = { value => &_decode($el), parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
 			push @{$pointer->{'content'}}, $entry;
 		} else {
@@ -171,7 +172,7 @@ sub objectarray_to_xml {
 	my $xml = '';
 	foreach my $stuff (@$object) {
 		if (! defined $stuff->{'element'} and defined $stuff->{'value'}) {
-			$xml .= &encode($stuff->{'value'});
+			$xml .= &_encode($stuff->{'value'});
 		} else {
 			$xml .= "<".$stuff->{'element'};
 			foreach my $attrname (keys %{$stuff->{'attrs'}}) {
@@ -247,7 +248,7 @@ sub simple_to_xml {
 		my $value = shift @$arref;
 
 		if (! ref $value) {
-			$xml .= "<$key>$value</$tag>";
+			$xml .= "<$key>"._encode($value)."</$tag>";
 		} else {
 			$xml .= "<$key>".simple_to_xml($value)."</$tag>";
 		}
@@ -325,7 +326,7 @@ When the tag represented by the $obj object has only text contents, returns thos
 sub value {
 	my $self = shift;
 
-	return $self->{'content'}[0]{'value'};
+	return &XML::MyXML::_decode($self->{'content'}[0]{'value'});
 }
 
 sub simplify {
@@ -336,7 +337,11 @@ sub simplify {
 	foreach my $child (@children) {
 		my $string = $child->as_string;
 		($string) = $string =~ />(.*)</sg;
-		$hash->{$child->{'element'}} = $string;
+		if ($string !~ /</) {
+			$hash->{$child->{'element'}} = &XML::MyXML::_decode($string);
+		} else {
+			$hash->{$child->{'element'}} = $child->simplify;
+		}
 	}
 
 	return $hash;
