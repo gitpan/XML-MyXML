@@ -18,7 +18,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.041';
 
 =head1 SYNOPSIS
 
@@ -297,11 +297,17 @@ sub _objectarray_to_simple {
 		if (defined $stuff->{'element'}) {
 			$hashref->{ $stuff->{'element'} } = &_objectarray_to_simple($stuff->{'content'});
 		} elsif (defined $stuff->{'value'}) {
-			return $stuff->{'value'} unless $stuff->{'value'} !~ /\S/;
+			my $value = $stuff->{'value'};
+			#$value =~ s/^\s*(.*?)\s*$/$1/s;
+			return $value if $value =~ /\S/;
 		}
 	}
 
-	return $hashref;
+	if (keys %$hashref) {
+		return $hashref;
+	} else {
+		return undef;
+	}
 }
 
 
