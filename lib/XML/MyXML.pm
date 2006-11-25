@@ -1,12 +1,12 @@
 package XML::MyXML;
 
-use warnings;
 use strict;
+use warnings;
 use utf8;
 use Carp;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml);
+our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple);
 
 =head1 NAME
 
@@ -18,7 +18,7 @@ Version 0.03
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -77,9 +77,10 @@ Returns the XML string in a tidy format (with tabs & newlines)
 
 sub tidy_xml {
 	my $xml = shift;
+	if ($xml eq 'XML::MyXML') { $xml = shift; }
 
 	my $object = &xml_to_object($xml);
-	&tidy_object($object);
+	&_tidy_object($object);
 	return &object_to_xml($object);
 }
 
@@ -94,6 +95,7 @@ Creates an 'XML::MyXML::Object' object from the raw XML provided
 
 sub xml_to_object {
 	my $xml = shift;
+	if ($xml eq 'XML::MyXML') { $xml = shift; }
 
 	# Preprocess
 	$xml =~ s/^(\s*<\?[^>]*\?>)*\s*//;
@@ -166,7 +168,7 @@ sub xml_to_object {
 	return $object;
 }
 
-sub objectarray_to_xml {
+sub _objectarray_to_xml {
 	my $object = shift;
 
 	my $xml = '';
@@ -177,15 +179,12 @@ sub objectarray_to_xml {
 			$xml .= "<".$stuff->{'element'};
 			foreach my $attrname (keys %{$stuff->{'attrs'}}) {
 				$xml .= " ".$attrname.'="'.$stuff->{'attrs'}{$attrname}.'"';
-				#$xml .= " ".$attr->{'name'}.'="'.$attr->{'value'}.'"';
 			}
 			if (! defined $stuff->{'content'}) {
 				$xml .= "/>"
 			} else {
-				$xml .= ">"
-			}
-			if (defined $stuff->{'content'}) {
-				$xml .= &objectarray_to_xml($stuff->{'content'});
+				$xml .= ">";
+				$xml .= &_objectarray_to_xml($stuff->{'content'});
 				$xml .= "</".$stuff->{'element'}.">";
 			}
 		}
@@ -193,16 +192,23 @@ sub objectarray_to_xml {
 	return $xml;
 }
 
+=head2 object_to_xml($object)
+
+Creates an XML string from the 'XML::MyXML::Object' object provided
+
+=cut
+
 sub object_to_xml {
 	my $object = shift;
+	if ($object eq 'XML::MyXML') { $object = shift; }
 
 #	my $xml = '';
 #	$xml .= '<?xml version="1.1" encoding="utf-8"?>'."\n";
 	#return $xml.&object_to_xml($object);
-	return &objectarray_to_xml([$object]);
+	return &_objectarray_to_xml([$object]);
 }
 
-sub tidy_object {
+sub _tidy_object {
 	my $object = shift;
 	my $tabs = shift || 0;
 
@@ -231,13 +237,20 @@ sub tidy_object {
 	push @{$object->{'content'}}, { value => "\n".("\t"x($tabs)), parent => $object };
 	
 	for my $i (0..$#{$object->{'content'}}) {
-		&tidy_object($object->{'content'}[$i], $tabs+1);
+		&_tidy_object($object->{'content'}[$i], $tabs+1);
 	}
 }
 
 
+=head2 simple_to_xml($simple_array_ref)
+
+Produces a raw XML string from an array reference such as this one: [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
+
+=cut
+
 sub simple_to_xml {
 	my $arref = shift;
+	if ($arref eq 'XML::MyXML') { $arref = shift; }
 
 	my $xml = '';
 
@@ -256,8 +269,40 @@ sub simple_to_xml {
 	return $xml;
 }
 
+=head2 xml_to_simple($raw_xml)
 
+Produces a very simple hash object from the raw XML string provided. An example hash object created thusly is this: { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } }
 
+Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
+
+=cut
+
+sub xml_to_simple {
+	my $xml = shift;
+	if ($xml eq 'XML::MyXML') { $xml = shift; }
+
+	my $object = &xml_to_object($xml);
+
+	return &_objectarray_to_simple([$object]);
+}
+
+sub _objectarray_to_simple {
+	my $object = shift;
+
+	if (! defined $object) { return undef; }
+
+	my $hashref = {};
+
+	foreach my $stuff (@$object) {
+		if (defined $stuff->{'element'}) {
+			$hashref->{ $stuff->{'element'} } = &_objectarray_to_simple($stuff->{'content'});
+		} elsif (defined $stuff->{'value'}) {
+			return $stuff->{'value'} unless $stuff->{'value'} !~ /\S/;
+		}
+	}
+
+	return $hashref;
+}
 
 
 
