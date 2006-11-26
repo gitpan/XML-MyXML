@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.05
+Version 0.051
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.051';
 
 =head1 SYNOPSIS
 
@@ -31,6 +31,7 @@ our $VERSION = '0.05';
     print "Price in Euros = " . $obj->path('price/eur')->value;
 
     $obj->simplify is hashref { item => { name => 'Table', price => { usd => '10.00', eur => '8.50' } } }
+
 =head1 EXPORT
 
 tidy_xml, object_to_xml, xml_to_object, simple_to_xml, xml_to_simple
@@ -55,6 +56,8 @@ sub _encode {
 
 sub _decode {
 	my $string = shift;
+	$string =~ s/\&\#x([0-9a-f]+)\;/chr(hex($1))/eg;
+	$string =~ s/\&\#([0-9]+)\;/chr($1)/eg;
 	my %replace = 	(
 					'<' => '&lt;', 
 					'>' => '&gt;', 
@@ -381,10 +384,17 @@ sub value {
 	return &XML::MyXML::_decode($self->{'content'}[0]{'value'});
 }
 
+=head2 $obj->simplify
+
+Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnins apply.
+
+=cut
+
 sub simplify {
 	my $self = shift;
 
-	return &XML::MyXML::xml_to_simple( &XML::MyXML::object_to_xml( $self ) );
+	return &XML::MyXML::_objectarray_to_simple([$self]);
+	#return &XML::MyXML::xml_to_simple( &XML::MyXML::object_to_xml( $self ) );
 }
 
 

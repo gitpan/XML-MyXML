@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.051   Nov 26th, 2006
+        Understands entities in XML (eg &#x20ac; &#161;)
+
 0.05    Nov 26th, 2006
 		Added $obj->simplify method
 
