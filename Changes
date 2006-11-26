@@ -4,13 +4,13 @@ Revision history for XML-MyXML
         Understands entities in XML (eg &#x20ac; &#161;)
 
 0.05    Nov 26th, 2006
-		Added $obj->simplify method
+        Added $obj->simplify method
 
 0.04	Nov 25th, 2006
-		Added xml_to_simple function
+        Added xml_to_simple function
 
 0.03	May 12th, 2006
-		Applied some encoding/decoding commands in several functions
+        Applied some encoding/decoding commands in several functions
 
 0.01    May 3rd, 2006
         First version, released on an unsuspecting world.
