@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.03
+Version 0.05
 
 =cut
 
-our $VERSION = '0.041';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -30,9 +30,10 @@ our $VERSION = '0.041';
     my $obj = xml_to_object($xml);
     print "Price in Euros = " . $obj->path('price/eur')->value;
 
+    $obj->simplify is hashref { item => { name => 'Table', price => { usd => '10.00', eur => '8.50' } } }
 =head1 EXPORT
 
-tidy_xml, object_to_xml, xml_to_object, simple_to_xml
+tidy_xml, object_to_xml, xml_to_object, simple_to_xml, xml_to_simple
 
 =head1 FUNCTIONS
 
@@ -257,7 +258,7 @@ sub simple_to_xml {
 	while (@$arref) {
 		my $key = shift @$arref;
 		my ($tag) = $key =~ /^(\S+)/g;
-		croak "Error: Strange key: $key" if ! defined $tag;
+		confess "Error: Strange key: $key" if ! defined $tag;
 		my $value = shift @$arref;
 
 		if (! ref $value) {
@@ -383,19 +384,7 @@ sub value {
 sub simplify {
 	my $self = shift;
 
-	my $hash = {};
-	my @children = $self->children;
-	foreach my $child (@children) {
-		my $string = $child->as_string;
-		($string) = $string =~ />(.*)</sg;
-		if ($string !~ /</) {
-			$hash->{$child->{'element'}} = &XML::MyXML::_decode($string);
-		} else {
-			$hash->{$child->{'element'}} = $child->simplify;
-		}
-	}
-
-	return $hash;
+	return &XML::MyXML::xml_to_simple( &XML::MyXML::object_to_xml( $self ) );
 }
 
 

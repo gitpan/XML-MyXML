@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.05    Nov 26th, 2006
+		Added $obj->simplify method
+
 0.04	Nov 25th, 2006
 		Added xml_to_simple function
 
