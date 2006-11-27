@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.052
+Version 0.061
 
 =cut
 
-our $VERSION = '0.052';
+our $VERSION = '0.061';
 
 =head1 SYNOPSIS
 
@@ -103,6 +103,8 @@ sub xml_to_object {
 
 	# Preprocess
 	$xml =~ s/^(\s*<\?[^>]*\?>)*\s*//;
+	# Parse CDATA sections
+	$xml =~ s/<\!\[CDATA\[(.*?)\]\]>/&_encode($1)/egs;
 	#my @els = grep {$_ =~ /\S/} $xml =~ /(<[^>]*?>|[^<>]+)/g;
 	my @els = $xml =~ /(<[^>]*?>|[^<>]+)/g;
 	my @stack;
@@ -332,13 +334,6 @@ sub new {
 	return $obj;
 }
 
-sub as_string {
-	my $self = shift;
-	
-	my $xml = XML::MyXML::object_to_xml($self);
-	return XML::MyXML::tidy_xml($xml);
-}
-
 sub children {
 	my $self = shift;
 	my $tag = shift;
@@ -386,7 +381,7 @@ sub value {
 
 =head2 $obj->simplify
 
-Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnins apply.
+Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply.
 
 =cut
 
@@ -395,6 +390,31 @@ sub simplify {
 
 	return &XML::MyXML::_objectarray_to_simple([$self]);
 	#return &XML::MyXML::xml_to_simple( &XML::MyXML::object_to_xml( $self ) );
+}
+
+=head2 $obj->to_xml
+
+Returns the XML string of the object, just like calling &object_to_xml( $obj )
+
+=cut
+
+sub to_xml {
+	my $self = shift;
+	
+	return XML::MyXML::object_to_xml($self);
+}
+
+=head2 $obj->to_tidy_xml
+
+Returns the XML string of the object in tidy form, just like calling &tidy_xml( &object_to_xml( $obj ) )
+
+=cut
+
+sub to_tidy_xml {
+	my $self = shift;
+	
+	my $xml = XML::MyXML::object_to_xml($self);
+	return XML::MyXML::tidy_xml($xml);
 }
 
 

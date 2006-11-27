@@ -1,7 +1,11 @@
 Revision history for XML-MyXML
 
+0.061   Nov 27th, 2006
+        Added parsing of CDATA sections
+        Added $object->to_xml and $object->to_tidy_xml methods
+
 0.051   Nov 26th, 2006
-        Understands entities in XML (eg &#x20ac; &#161;)
+        Understands numerical (dec and hex) entities in XML (eg &#x20ac; and &#161;)
 
 0.05    Nov 26th, 2006
         Added $obj->simplify method
