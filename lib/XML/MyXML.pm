@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.07
+Version 0.075
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.075';
 
 =head1 SYNOPSIS
 
@@ -405,6 +405,19 @@ sub value {
 	my $self = shift;
 
 	return &XML::MyXML::_decode($self->{'content'}[0]{'value'});
+}
+
+=head2 $obj->attr('attrname')
+
+Returns the value of the 'attrname' attribute of top element. Returns undef if attribute does not exist.
+
+=cut
+
+sub attr {
+	my $self = shift;
+	my $attrname = shift;
+
+	return $self->{'attrs'}->{$attrname};
 }
 
 =head2 $obj->simplify

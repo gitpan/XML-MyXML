@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.075   Feb 25th, 2007
+        Added the ->attr('attr_name') method to XML objects, which retrieves the value of an attribute
+
 0.07    Feb 25th, 2007
         Added a check_xml function that checks if the provided XML document is valid enough for use with this module
 
