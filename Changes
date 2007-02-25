@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.065   Feb 25th, 2007
+        Handles attributes in tags better (attrs are allowed to contain spaces)
+
 0.0641  Feb 25th, 2007
         Now handles XML comments when parsing XML documents
 

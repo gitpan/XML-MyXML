@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.0641
+Version 0.065
 
 =cut
 
-our $VERSION = '0.0641';
+our $VERSION = '0.065';
 
 =head1 SYNOPSIS
 
@@ -140,10 +140,13 @@ sub xml_to_object {
 			my $elementmeta = quotemeta($element);
 			$el =~ s/^<$elementmeta//;
 			$el =~ s/\/>$//;
-			my @attrs = $el =~ /(\s+\S+)/g;
+			my @attrs = $el =~ /\s+(\S+=(['"]).*?\2)/g;
+			my $i = 1;
+			@attrs = grep {$i++ % 2} @attrs;
+			#my @attrs = $el =~ /(\s+\S+)/g;
 			my %attr;
 			foreach my $attr (@attrs) {
-				my ($name, $value) = $attr =~ /^\s*(\S+)\s*=\s*['"](.*?)['"]\s*$/g;
+				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
 				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'"; }
 				$attr{$name} = $value;
 			}
@@ -157,10 +160,14 @@ sub xml_to_object {
 			my $elementmeta = quotemeta($element);
 			$el =~ s/^<$elementmeta//;
 			$el =~ s/>$//;
-			my @attrs = $el =~ /(\s+\S+)/g;
+			my @attrs = $el =~ /\s+(\S+=(['"]).*?\2)/g;
+			my $i = 1;
+			@attrs = grep {$i++ % 2} @attrs;
+			#my @attrs = $el =~ /(\s+\S+)/g;
 			my %attr;
 			foreach my $attr (@attrs) {
-				my ($name, $value) = $attr =~ /^\s*(\S+)\s*=\s*['"](.*?)['"]\s*$/g;
+				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
+				#my ($name, $value) = $attr =~ /^\s*(\S+)\s*=\s*['"](.*?)['"]\s*$/g;
 				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'"; }
 				$attr{$name} = $value;
 			}
