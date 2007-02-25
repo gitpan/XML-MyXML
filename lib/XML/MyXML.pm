@@ -6,7 +6,7 @@ use utf8;
 use Carp;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple);
+our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple check_xml);
 
 =head1 NAME
 
@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.066
+Version 0.07
 
 =cut
 
-our $VERSION = '0.066';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -89,8 +89,6 @@ sub tidy_xml {
 }
 
 
-
-
 =head2 xml_to_object($rawxml)
 
 Creates an 'XML::MyXML::Object' object from the raw XML provided
@@ -99,20 +97,20 @@ Creates an 'XML::MyXML::Object' object from the raw XML provided
 
 sub xml_to_object {
 	my $xml = shift;
+	my $jk = shift; # just checking xml
 	if ($xml eq 'XML::MyXML') { $xml = shift; }
 
 	# Preprocess
 	$xml =~ s/^(\s*<\?[^>]*\?>)*\s*//;
 	# Parse CDATA sections
 	$xml =~ s/<\!\[CDATA\[(.*?)\]\]>/&_encode($1)/egs;
-	#my @els = grep {$_ =~ /\S/} $xml =~ /(<[^>]*?>|[^<>]+)/g;
 	my @els = $xml =~ /(<!--.*?(?:-->|$)|<[^>]*?>|[^<>]+)/sg;
 	# Remove comments and initial whitespace
 	{
 		my $init_ws = 1;
 		foreach my $el (@els) {
 			if ($el =~ /^<!--/) {
-				if ($el !~ /-->$/) { confess "Error: unclosed XML comment block - '$el'"; }
+				if ($el !~ /-->$/) { confess "Error: unclosed XML comment block - '$el'" unless $jk; return 0; }
 				undef $el;
 				next;
 			} elsif ($init_ws) {
@@ -124,66 +122,58 @@ sub xml_to_object {
 			}
 		}
 		@els = grep { defined $_ } @els;
+		if (! @els) { confess "Error: No elements in XML document" unless $jk; return 0; }
 	}
-	#print "====================\n";
 	my @stack;
 	my $object = { content => [] };
-	#my $pointer = $object;
 	my $pointer = $object;
 	foreach my $el (@els) {
 		if ($el =~ /^<\?[^>]*\?>$/) {
 			next;
 		} elsif ($el =~ /^<\/[^\s>]+>$/) {
 			my ($element) = $el =~ /^<\/(\S+)>$/g;
-			if (! length($element)) { confess "Error: Strange element: '$el'"; }
-			if ($stack[$#stack]->{'element'} ne $element) { confess "Error: Incompatible stack element: stack='".$stack[$#stack]->{'element'}."' element='$el'"; }
+			if (! length($element)) { confess "Error: Strange element: '$el'" unless $jk; return 0; }
+			if ($stack[$#stack]->{'element'} ne $element) { confess "Error: Incompatible stack element: stack='".$stack[$#stack]->{'element'}."' element='$el'" unless $jk; return 0; }
 			my $stackentry = pop @stack;
 			if ($#{$stackentry->{'content'}} == -1) {
 				delete $stackentry->{'content'};
-#				my $entry = { element => undef, attrs => {}, value => '', parent => $stackentry };
-#				push @{$stackentry->{'content'}}, $entry;
 			}
 			$pointer = $stackentry->{'parent'};
 		} elsif ($el =~ /^<[^>]+\/>$/) {
 			my ($element) = $el =~ /^<([^\s>\/]+)/g;
-			if (! length($element)) { confess "Error: Strange element: '$el'"; }
+			if (! length($element)) { confess "Error: Strange element: '$el'" unless $jk; return 0; }
 			my $elementmeta = quotemeta($element);
 			$el =~ s/^<$elementmeta//;
 			$el =~ s/\/>$//;
 			my @attrs = $el =~ /\s+(\S+=(['"]).*?\2)/g;
 			my $i = 1;
 			@attrs = grep {$i++ % 2} @attrs;
-			#my @attrs = $el =~ /(\s+\S+)/g;
 			my %attr;
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
-				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'"; }
+				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $jk; return 0; }
 				$attr{$name} = $value;
 			}
 			my $entry = { element => $element, attrs => \%attr, parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
-			#my $entry = { element => $element, (scalar(keys %attr) ? (attrs => \%attr) : ()), content => [], parent => $pointer };
 			push @{$pointer->{'content'}}, $entry;
 		} elsif ($el =~ /^<[^\s>\/][^>]*>$/) {
 			my ($element) = $el =~ /^<([^\s>]+)/g;
-			if (! length($element)) { confess "Error: Strange element: '$el'"; }
+			if (! length($element)) { confess "Error: Strange element: '$el'" unless $jk; return 0; }
 			my $elementmeta = quotemeta($element);
 			$el =~ s/^<$elementmeta//;
 			$el =~ s/>$//;
 			my @attrs = $el =~ /\s+(\S+=(['"]).*?\2)/g;
 			my $i = 1;
 			@attrs = grep {$i++ % 2} @attrs;
-			#my @attrs = $el =~ /(\s+\S+)/g;
 			my %attr;
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
-				#my ($name, $value) = $attr =~ /^\s*(\S+)\s*=\s*['"](.*?)['"]\s*$/g;
-				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'"; }
+				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $jk; return 0; }
 				$attr{$name} = $value;
 			}
 			my $entry = { element => $element, attrs => \%attr, content => [], parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
-			#my $entry = { element => $element, (scalar(keys %attr) ? (attrs => \%attr) : ()), content => [], parent => $pointer };
 			push @stack, $entry;
 			push @{$pointer->{'content'}}, $entry;
 			$pointer = $entry;
@@ -192,7 +182,7 @@ sub xml_to_object {
 			bless $entry, 'XML::MyXML::Object';
 			push @{$pointer->{'content'}}, $entry;
 		} else {
-			confess "Error: Strange element: '$el'";
+			confess "Error: Strange element: '$el'" unless $jk; return 0;
 		}
 	}
 	$object = $object->{'content'}[0];
@@ -343,6 +333,18 @@ sub _objectarray_to_simple {
 }
 
 
+=head2 check_xml($rawxml)
+
+Returns 1 if the $rawxml string is valid XML (valid enough to be used by this module), and 0 otherwise
+
+=cut
+
+sub check_xml {
+	my $xml = shift;
+	return 1 if &xml_to_object($xml, 'checking');
+	return 0;
+}
+
 
 
 package XML::MyXML::Object;
@@ -415,7 +417,6 @@ sub simplify {
 	my $self = shift;
 
 	return &XML::MyXML::_objectarray_to_simple([$self]);
-	#return &XML::MyXML::xml_to_simple( &XML::MyXML::object_to_xml( $self ) );
 }
 
 =head2 $obj->to_xml

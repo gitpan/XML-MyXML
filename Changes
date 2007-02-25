@@ -1,5 +1,11 @@
 Revision history for XML-MyXML
 
+0.07    Feb 25th, 2007
+        Added a check_xml function that checks if the provided XML document is valid enough for use with this module
+
+0.066   Feb 25th, 2007
+        Allows whitespace and comments to exist before the root element
+
 0.065   Feb 25th, 2007
         Handles attributes in tags better (attrs are allowed to contain spaces)
 
