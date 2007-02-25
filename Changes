@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0641  Feb 25th, 2007
+        Now handles XML comments when parsing XML documents
+
 0.061   Nov 27th, 2006
         Added parsing of CDATA sections
         Added $object->to_xml and $object->to_tidy_xml methods
