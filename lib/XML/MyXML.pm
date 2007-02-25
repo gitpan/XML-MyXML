@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.065
+Version 0.066
 
 =cut
 
-our $VERSION = '0.065';
+our $VERSION = '0.066';
 
 =head1 SYNOPSIS
 
@@ -107,14 +107,24 @@ sub xml_to_object {
 	$xml =~ s/<\!\[CDATA\[(.*?)\]\]>/&_encode($1)/egs;
 	#my @els = grep {$_ =~ /\S/} $xml =~ /(<[^>]*?>|[^<>]+)/g;
 	my @els = $xml =~ /(<!--.*?(?:-->|$)|<[^>]*?>|[^<>]+)/sg;
-	# Remove comments
-	foreach my $el (@els) {
-		if ($el =~ /^<!--/) {
-			if ($el !~ /-->$/) { confess "Error: unclosed XML comment block - '$el'"; }
-			undef $el;
+	# Remove comments and initial whitespace
+	{
+		my $init_ws = 1;
+		foreach my $el (@els) {
+			if ($el =~ /^<!--/) {
+				if ($el !~ /-->$/) { confess "Error: unclosed XML comment block - '$el'"; }
+				undef $el;
+				next;
+			} elsif ($init_ws) {
+				if ($el =~ /\S/) {
+					$init_ws = 0;
+				} else {
+					undef $el;
+				}
+			}
 		}
+		@els = grep { defined $_ } @els;
 	}
-	@els = grep { defined $_ } @els;
 	#print "====================\n";
 	my @stack;
 	my $object = { content => [] };
