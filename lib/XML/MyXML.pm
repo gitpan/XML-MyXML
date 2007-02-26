@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.075
+Version 0.076
 
 =cut
 
-our $VERSION = '0.075';
+our $VERSION = '0.076';
 
 =head1 SYNOPSIS
 
@@ -42,6 +42,7 @@ tidy_xml, object_to_xml, xml_to_object, simple_to_xml, xml_to_simple
 
 sub _encode {
 	my $string = shift;
+	defined $string or $string = '';
 	my %replace = 	(
 					'<' => '&lt;', 
 					'>' => '&gt;', 
@@ -56,6 +57,7 @@ sub _encode {
 
 sub _decode {
 	my $string = shift;
+	defined $string or $string = '';
 	$string =~ s/\&\#x([0-9a-f]+)\;/chr(hex($1))/eg;
 	$string =~ s/\&\#([0-9]+)\;/chr($1)/eg;
 	my %replace = 	(
@@ -72,7 +74,7 @@ sub _decode {
 }
 
 
-=head2 tidy_xml($rawxml)
+=head2 tidy_xml($raw_xml)
 
 Returns the XML string in a tidy format (with tabs & newlines)
 
@@ -89,7 +91,7 @@ sub tidy_xml {
 }
 
 
-=head2 xml_to_object($rawxml)
+=head2 xml_to_object($raw_xml)
 
 Creates an 'XML::MyXML::Object' object from the raw XML provided
 
@@ -333,9 +335,9 @@ sub _objectarray_to_simple {
 }
 
 
-=head2 check_xml($rawxml)
+=head2 check_xml($raw_xml)
 
-Returns 1 if the $rawxml string is valid XML (valid enough to be used by this module), and 0 otherwise
+Returns 1 if the $raw_xml string is valid XML (valid enough to be used by this module), and 0 otherwise
 
 =cut
 
@@ -377,7 +379,7 @@ sub children {
 
 =head2 $obj->path("subtag1/subsubtag2/.../subsubsubtagX")
 
-Returns the tag specified by the path as an XML::MyXML::Object object. When there are more than one tags with the specified name in the last step of the path, it will return all of them as an array.
+Returns the element specified by the path as an XML::MyXML::Object object. When there are more than one tags with the specified name in the last step of the path, it will return all of them as an array.
 
 =cut
 

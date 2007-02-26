@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.076   Feb 27th, 2007
+        $element->value returns empty string ('') if element is empty, instead of null
+
 0.075   Feb 25th, 2007
         Added the ->attr('attr_name') method to XML objects, which retrieves the value of an attribute
 
