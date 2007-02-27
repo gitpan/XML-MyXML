@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.076
+Version 0.0761
 
 =cut
 
-our $VERSION = '0.076';
+our $VERSION = '0.0761';
 
 =head1 SYNOPSIS
 
