@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.0761
+Version 0.08
 
 =cut
 
-our $VERSION = '0.0761';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -154,7 +154,7 @@ sub xml_to_object {
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
 				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $jk; return 0; }
-				$attr{$name} = $value;
+				$attr{$name} = &_decode($value);
 			}
 			my $entry = { element => $element, attrs => \%attr, parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
@@ -172,7 +172,7 @@ sub xml_to_object {
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
 				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $jk; return 0; }
-				$attr{$name} = $value;
+				$attr{$name} = &_decode($value);
 			}
 			my $entry = { element => $element, attrs => \%attr, content => [], parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
@@ -202,7 +202,7 @@ sub _objectarray_to_xml {
 		} else {
 			$xml .= "<".$stuff->{'element'};
 			foreach my $attrname (keys %{$stuff->{'attrs'}}) {
-				$xml .= " ".$attrname.'="'.$stuff->{'attrs'}{$attrname}.'"';
+				$xml .= " ".$attrname.'="'.&_encode($stuff->{'attrs'}{$attrname}).'"';
 			}
 			if (! defined $stuff->{'content'}) {
 				$xml .= "/>"
@@ -397,9 +397,28 @@ sub path {
 	return wantarray ? $el->children($path[$#path]) : ($el->children($path[$#path]))[0];
 }
 
+=head2 $obj->tag
+
+Returns the tag of the $obj element (after stripping it from namespaces). E.g. if $obj represents an <rss:item> element, $obj->tag will just return 'item'.
+Returns undef if $obj doesn't represent a tag.
+
+=cut
+
+sub tag {
+	my $self = shift;
+
+	my $tag = $self->{'element'};
+	if (defined $tag) {
+		$tag =~ s/^.*\://;
+		return $tag;
+	} else {
+		return undef;
+	}
+}
+
 =head2 $obj->value
 
-When the tag represented by the $obj object has only text contents, returns those contents as a string
+When the element represented by the $obj object has only text contents, returns those contents as a string
 
 =cut
 

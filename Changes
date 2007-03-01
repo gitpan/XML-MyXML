@@ -1,5 +1,10 @@
 Revision history for XML-MyXML
 
+0.08    Mar 1st, 2007
+        XML-decodes the attribute values when parsing documents, and XML-encodes them when creating XML documents
+        Added the ->tag method to XML objects, which retrieves the tag name of the top element
+		Minor alterations in documentation
+
 0.076   Feb 27th, 2007
         $element->value returns empty string ('') if element is empty, instead of null
 
