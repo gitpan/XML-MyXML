@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.09    Mar 3rd, 2007
+        simple_to_xml($simple_ref) has been changed to allow the argument to be a hashref, an arrayref or a mixed structure
+
 0.083   Mar 3rd, 2007
         Changed the way that flags are set. Instead of a string such as 'strip internal', it's with a hashref { strip => 1, internal => 1 }. Module stops execution and informs about the change, if programmer tries to set flags with the old way.
 

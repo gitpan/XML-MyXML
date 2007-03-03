@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.083
+Version 0.09
 
 =cut
 
-our $VERSION = '0.083';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -276,7 +276,11 @@ sub _tidy_object {
 
 =head2 simple_to_xml($simple_array_ref)
 
-Produces a raw XML string from an array reference such as this one: [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
+Produces a raw XML string from an array reference or a hash reference (or a mixed structure) such as these examples:
+
+    { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } }
+    [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
+    { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
 
 =cut
 
@@ -285,6 +289,26 @@ sub simple_to_xml {
 	if ($arref eq 'XML::MyXML') { $arref = shift; }
 
 	my $xml = '';
+	my ($key, $value, @residue) = (ref $arref eq 'HASH') ? %$arref : @$arref;
+	if (@residue) { confess "Error: the provided simple ref contains more than 1 top element"; }
+	my ($tag) = $key =~ /^(\S+)/g;
+	confess "Error: Strange key: $key" if ! defined $tag;
+
+	if (! ref $value) {
+		$xml .= "<$key>"._encode($value)."</$key>";
+	} else {
+		$xml .= "<$key>"._arrayref_to_xml($value)."</$key>";
+	}
+	return $xml;
+}
+
+
+sub _arrayref_to_xml {
+	my $arref = shift;
+
+	my $xml = '';
+
+	if (ref $arref eq 'HASH') { return _hashref_to_xml($arref); }
 
 	while (@$arref) {
 		my $key = shift @$arref;
@@ -295,7 +319,26 @@ sub simple_to_xml {
 		if (! ref $value) {
 			$xml .= "<$key>"._encode($value)."</$tag>";
 		} else {
-			$xml .= "<$key>".simple_to_xml($value)."</$tag>";
+			$xml .= "<$key>"._arrayref_to_xml($value)."</$tag>";
+		}
+	}
+	return $xml;
+}
+
+
+sub _hashref_to_xml {
+	my $hashref = shift;
+
+	my $xml = '';
+
+	while (my ($key, $value) = each %$hashref) {
+		my ($tag) = $key =~ /^(\S+)/g;
+		confess "Error: Strange key: $key" if ! defined $tag;
+
+		if (! ref $value) {
+			$xml .= "<$key>"._encode($value)."</$tag>";
+		} else {
+			$xml .= "<$key>"._arrayref_to_xml($value)."</$tag>";
 		}
 	}
 	return $xml;
