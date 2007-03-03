@@ -1,8 +1,12 @@
 Revision history for XML-MyXML
 
+0.082   Mar 3rd, 2007
+		Added optional 'strip' mode for the &xml_to_simple function and the $obj->simplify method, that strips surrounding whitespace from texts
+		Added optional 'internal' mode for the $obj->simplify method, that return a hashref only of the contents of the top element
+
 0.081   Mar 3rd, 2007
         Added an 'internal' mode for the &xml_to_simple function
-		Added a 'strip' mode for the ->value function that strips surrounding whitespace
+        Added a 'strip' mode for the ->value method that strips surrounding whitespace
 
 0.08    Mar 1st, 2007
         XML-decodes the attribute values when parsing documents, and XML-encodes them when creating XML documents
