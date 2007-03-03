@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.08
+Version 0.081
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.081';
 
 =head1 SYNOPSIS
 
@@ -31,10 +31,11 @@ our $VERSION = '0.08';
     print "Price in Euros = " . $obj->path('price/eur')->value;
 
     $obj->simplify is hashref { item => { name => 'Table', price => { usd => '10.00', eur => '8.50' } } }
+    $obj->simplify('internal') is hashref { name => 'Table', price => { usd => '10.00', eur => '8.50' } }
 
 =head1 EXPORT
 
-tidy_xml, object_to_xml, xml_to_object, simple_to_xml, xml_to_simple
+tidy_xml, xml_to_object, object_to_xml, simple_to_xml, xml_to_simple, check_xml
 
 =head1 FUNCTIONS
 
@@ -132,6 +133,8 @@ sub xml_to_object {
 	foreach my $el (@els) {
 		if ($el =~ /^<\?[^>]*\?>$/) {
 			next;
+		} elsif ($el =~ /^<\/?>$/) {
+			confess "Error: Strange element: '$el'" unless $jk; return 0;
 		} elsif ($el =~ /^<\/[^\s>]+>$/) {
 			my ($element) = $el =~ /^<\/(\S+)>$/g;
 			if (! length($element)) { confess "Error: Strange element: '$el'" unless $jk; return 0; }
@@ -299,15 +302,22 @@ Produces a very simple hash object from the raw XML string provided. An example 
 
 Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
 
+If called with the 'internal' flag set (like this: &xml_to_simple($raw_xml, 'internal')), then the hashref returned will be the first value of the hashref that would otherwise be returned, i.e. a hashref created only by the contents of the top element in the XML and which doesn't contain information about the top-level tag.
+
 =cut
 
 sub xml_to_simple {
 	my $xml = shift;
 	if ($xml eq 'XML::MyXML') { $xml = shift; }
+	my $internal;
+	if (@_) {
+		if ($_[0] eq 'internal') { $internal = 1; } else { confess "The optional flag in &xml_to_simple may only be the string 'internal' - your optional flag was '$_[0]'"; }
+	}
 
 	my $object = &xml_to_object($xml);
 
-	return &_objectarray_to_simple([$object]);
+	my $simple = &_objectarray_to_simple([$object]);
+	if (! $internal) { return $simple } else { return (values %$simple)[0] }
 }
 
 sub _objectarray_to_simple {
@@ -350,6 +360,8 @@ sub check_xml {
 
 
 package XML::MyXML::Object;
+
+use Carp;
 
 =head1 OBJECT METHODS
 
@@ -416,16 +428,21 @@ sub tag {
 	}
 }
 
-=head2 $obj->value
+=head2 $obj->value and $obj->value('strip')
 
-When the element represented by the $obj object has only text contents, returns those contents as a string
+When the element represented by the $obj object has only text contents, returns those contents as a string. If the $obj element has no contents, value will return an empty string. Can be used with the 'strip' flag (as in: $obj->value('strip')) to strip possible whitespace in the beginning and end of the value.
 
 =cut
 
 sub value {
 	my $self = shift;
+	my $flag = (@_ and defined $_[0] and ! ref $_[0]) ? $_[0] : '';
 
-	return &XML::MyXML::_decode($self->{'content'}[0]{'value'});
+	if (length($flag) and $flag ne 'strip') { confess "Error: Only allowable flag for the '->value' method is 'strip'. You entered '$flag'. (See module's documentation for more)"; }
+
+	my $value = &XML::MyXML::_decode($self->{'content'}[0]{'value'});
+	if ($flag eq 'strip') { $value =~ s/^\s*(.*?)\s*$/$1/s; }
+	return $value;
 }
 
 =head2 $obj->attr('attrname')
