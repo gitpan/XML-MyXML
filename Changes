@@ -1,8 +1,11 @@
 Revision history for XML-MyXML
 
+0.083   Mar 3rd, 2007
+        Changed the way that flags are set. Instead of a string such as 'strip internal', it's with a hashref { strip => 1, internal => 1 }. Module stops execution and informs about the change, if programmer tries to set flags with the old way.
+
 0.082   Mar 3rd, 2007
-		Added optional 'strip' mode for the &xml_to_simple function and the $obj->simplify method, that strips surrounding whitespace from texts
-		Added optional 'internal' mode for the $obj->simplify method, that return a hashref only of the contents of the top element
+        Added optional 'strip' mode for the &xml_to_simple function and the $obj->simplify method, that strips surrounding whitespace from texts
+        Added optional 'internal' mode for the $obj->simplify method, that return a hashref only of the contents of the top element
 
 0.081   Mar 3rd, 2007
         Added an 'internal' mode for the &xml_to_simple function
