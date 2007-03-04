@@ -14,11 +14,11 @@ XML::MyXML - A simple XML module
 
 =head1 VERSION
 
-Version 0.09
+Version 0.091
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.091';
 
 =head1 SYNOPSIS
 
@@ -101,12 +101,22 @@ sub tidy_xml {
 
 Creates an 'XML::MyXML::Object' object from the raw XML provided
 
+If called with the C<file> flag (like this: C<< xml_to_object($filename, { file => 1 }) >>), then the function's first parameter, instead of being an XML string, should be the path to a file that contains the XML document.
+
 =cut
 
 sub xml_to_object {
 	my $xml = shift;
-	my $jk = shift; # just checking xml
 	if ($xml eq 'XML::MyXML') { $xml = shift; }
+	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
+
+	my $jk = $flags->{'jk'}; # just checking xml
+
+	if ($flags->{'file'}) {
+		open FILE, $xml or confess "Error: The file '$xml' could not be opened for reading.";
+		$xml = join '', <FILE>;
+		close FILE;
+	}
 
 	# Preprocess
 	$xml =~ s/^(\s*<\?[^>]*\?>)*\s*//;
@@ -276,7 +286,7 @@ sub _tidy_object {
 
 =head2 simple_to_xml($simple_array_ref)
 
-Produces a raw XML string from an array reference or a hash reference (or a mixed structure) such as these examples:
+Produces a raw XML string from either an array reference, a hash reference or a mixed structure such as these examples:
 
     { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } }
     [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
@@ -344,17 +354,19 @@ sub _hashref_to_xml {
 	return $xml;
 }
 
-=head2 xml_to_simple($raw_xml) or xml_to_simple($raw_xml, { strip => 1 }) or xml_to_simple($raw_xml, { internal => 1 })
+=head2 xml_to_simple($raw_xml)
 
-Produces a very simple hash object from the raw XML string provided. An example hash object created thusly is this: { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } }
+Produces a very simple hash object from the raw XML string provided. An example hash object created thusly is this: S<C<< { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } } >>>
 
 Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
 
-If called with the 'internal' flag set, then the hashref returned will be the first value of the hashref that would otherwise be returned, i.e. a hashref created only by the contents of the top element in the XML and which doesn't contain information about the top-level tag (See SYNOPSIS section for an example)
+You can use flags like this: S<C<< &xml_to_simple($raw_xml, {strip => 1, internal => 1, ...}) >>>.
 
-If called with the 'strip' flag set, then all text contents will be stripped of possible beginning and/or ending whitespace.
+If called with the 'C<internal>' flag, then the hashref returned will be the first value of the hashref that would otherwise be returned, i.e. a hashref created only by the contents of the top element in the XML and which doesn't contain information about the top-level tag (See L</SYNOPSIS> section for an example)
 
-To use both flags, write: &xml_to_simple($raw_xml, { internal => 1, strip => 1 }).
+If called with the 'C<strip>' flag, then all text contents will be stripped of possible beginning and/or ending whitespace.
+
+If called with the 'C<file>' flag, then the function's first parameter, instead of being an XML string, should be the path to a file that holds the XML document.
 
 =cut
 
@@ -363,6 +375,12 @@ sub xml_to_simple {
 	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
 
 	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
+
+	if ($flags->{'file'}) {
+		open FILE, $xml or confess "Error: The file '$xml' could not be opened for reading.";
+		$xml = join '', <FILE>;
+		close FILE;
+	}
 
 	my $object = &xml_to_object($xml);
 
@@ -405,7 +423,7 @@ Returns 1 if the $raw_xml string is valid XML (valid enough to be used by this m
 
 sub check_xml {
 	my $xml = shift;
-	return 1 if &xml_to_object($xml, 'checking');
+	return 1 if &xml_to_object($xml, { jk => 1 }); # jk = 'just checking'
 	return 0;
 }
 
@@ -461,9 +479,11 @@ sub path {
 	return wantarray ? $el->children($path[$#path]) : ($el->children($path[$#path]))[0];
 }
 
-=head2 $obj->value and $obj->value({ strip => 1 })
+=head2 $obj->value
 
-When the element represented by the $obj object has only text contents, returns those contents as a string. If the $obj element has no contents, value will return an empty string. Can be used with the 'strip' flag (as in: $obj->value({ strip => 1 })) to strip possible whitespace in the beginning and end of the value.
+When the element represented by the $obj object has only text contents, returns those contents as a string. If the $obj element has no contents, value will return an empty string.
+
+Can be used with the 'strip' flag (as in: S<C<< $obj->value({ strip => 1 }) >>>) to strip possible whitespace in the beginning and end of the value.
 
 =cut
 

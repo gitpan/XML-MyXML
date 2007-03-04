@@ -1,5 +1,9 @@
 Revision history for XML-MyXML
 
+0.091   Mar 4th, 2007
+        xml_to_simple and xml_to_object can now accept a filename for an argument
+        Minor alterations in the documentation
+
 0.09    Mar 3rd, 2007
         simple_to_xml($simple_ref) has been changed to allow the argument to be a hashref, an arrayref or a mixed structure
 
