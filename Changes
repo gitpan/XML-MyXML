@@ -1,5 +1,10 @@
 Revision history for XML-MyXML
 
+0.092   Mar 5th, 2007
+        check_xml, which used to be able to check XML strings only, can now check XML files also
+        Added an optional 'soft' mode to xml_to_simple and xml_to_object functions, which returns undef instead of dying in case of error
+        Added the :all export tag - imports all exportable functions
+
 0.091   Mar 4th, 2007
         xml_to_simple and xml_to_object can now accept a filename for an argument
         Minor alterations in the documentation
