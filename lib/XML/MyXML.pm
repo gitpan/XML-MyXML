@@ -10,19 +10,20 @@ our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_si
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 =head1 NAME
 
-XML::MyXML - A simple XML module
+XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.092
+Version 0.093
 
 =cut
 
-our $VERSION = '0.092';
+our $VERSION = '0.093';
 
 =head1 SYNOPSIS
 
     use XML::MyXML qw(tidy_xml xml_to_object);
+    use XML::MyXML qw(:all);
 
     my $xml = "<item><name>Table</name><price><usd>10.00</usd><eur>8.50</eur></price></item>";
     print tidy_xml($xml);
@@ -36,6 +37,34 @@ our $VERSION = '0.092';
 =head1 EXPORT
 
 tidy_xml, xml_to_object, object_to_xml, simple_to_xml, xml_to_simple, check_xml
+
+=head1 DESCRIPTION
+
+A simple-to-use XML module, for parsing and creating XML documents
+
+=head1 FEATURES & LIMITATIONS
+
+This module can handle XML comments, CDATA sections, and XML entities (the standard five as well as numeric (dec & hex) ones)
+
+But it will ignore (won't parse) <!DOCTYPE...> and <?...?> special markup
+
+Parsed documents must have the UTF-8 encoding, as all XML documents produced by this module will
+
+Attribute values may not contain the C<< > >> character
+
+=head1 FUNCTION FLAGS
+
+Some functions or methods in this module accept flags, listed under each function in the documentation. They are optional, default to zero, and can be used as follows: C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>. What they do when set is this:
+
+C<strip> : the function will strip initial and ending whitespace from all text values returned
+
+C<file> : the function will expect the path to a file containing an XML document to parse, instead of an XML string
+
+C<complete> : the function's XML output will include an XML declaration in the beginning
+
+C<soft> : the function will return undef instead of dying in case of a error during XML parsing
+
+C<internal> : the function will only return the contents of an element in a hashref instead of the element itself (see L</SYNOPISIS> for example)
 
 =head1 FUNCTIONS
 
@@ -84,6 +113,8 @@ sub _strip {
 
 Returns the XML string in a tidy format (with tabs & newlines)
 
+Optional flags: C<file>, C<complete>
+
 =cut
 
 
@@ -94,7 +125,7 @@ sub tidy_xml {
 
 	my $object = &xml_to_object($xml);
 	&_tidy_object($object, undef, $flags);
-	return &object_to_xml($object);
+	return &object_to_xml($object, { complete => $flags->{'complete'} });
 }
 
 
@@ -102,7 +133,7 @@ sub tidy_xml {
 
 Creates an 'XML::MyXML::Object' object from the raw XML provided
 
-If called with the C<file> flag (like this: C<< xml_to_object($filename, { file => 1 }) >>), then the function's first parameter, instead of being an XML string, should be the path to a file that contains the XML document. If called with the C<soft> flag, the function will return C<undef> instead of dying (in case of error).
+Optional flags: C<file>, C<soft>
 
 =cut
 
@@ -119,19 +150,21 @@ sub xml_to_object {
 		close FILE;
 	}
 
-	# Preprocess
-	$xml =~ s/^(\s*<\?[^>]*\?>)*\s*//;
 	# Parse CDATA sections
 	$xml =~ s/<\!\[CDATA\[(.*?)\]\]>/&_encode($1)/egs;
 	my @els = $xml =~ /(<!--.*?(?:-->|$)|<[^>]*?>|[^<>]+)/sg;
-	# Remove comments and initial whitespace
+	# Remove comments, special markup and initial whitespace
 	{
 		my $init_ws = 1;
 		foreach my $el (@els) {
 			if ($el =~ /^<!--/) {
 				if ($el !~ /-->$/) { confess "Error: unclosed XML comment block - '$el'" unless $soft; return undef; }
 				undef $el;
-				next;
+			} elsif ($el =~ /^<\?/) { # like <?xml?> or <?target?>
+				if ($el !~ /\?>$/) { confess "Error: Erroneous special markup - '$el'" unless $soft; return undef; }
+				undef $el;
+			} elsif ($el =~ /<!/) { # like <!DOCTYPE> or <!ELEMENT> or <!ATTLIST>
+				undef $el;
 			} elsif ($init_ws) {
 				if ($el =~ /\S/) {
 					$init_ws = 0;
@@ -147,9 +180,7 @@ sub xml_to_object {
 	my $object = { content => [] };
 	my $pointer = $object;
 	foreach my $el (@els) {
-		if ($el =~ /^<\?[^>]*\?>$/) {
-			next;
-		} elsif ($el =~ /^<\/?>$/) {
+		if ($el =~ /^<\/?>$/) {
 			confess "Error: Strange element: '$el'" unless $soft; return undef;
 		} elsif ($el =~ /^<\/[^\s>]+>$/) {
 			my ($element) = $el =~ /^<\/(\S+)>$/g;
@@ -206,7 +237,7 @@ sub xml_to_object {
 			confess "Error: Strange element: '$el'" unless $soft; return undef;
 		}
 	}
-	if (@stack) { confess "Error: some elements have not been closed in XML" unless $soft; return undef; }
+	if (@stack) { confess "Error: The <$stack[-1]->{'element'}> element has not been closed in XML" unless $soft; return undef; }
 	$object = $object->{'content'}[0];
 	$object->{'parent'} = undef;
 	return $object;
@@ -240,16 +271,16 @@ sub _objectarray_to_xml {
 
 Creates an XML string from the 'XML::MyXML::Object' object provided
 
+Optional flags: C<complete>
+
 =cut
 
 sub object_to_xml {
 	my $object = shift;
-	if ($object eq 'XML::MyXML') { $object = shift; }
+	my $flags = shift || {};
 
-#	my $xml = '';
-#	$xml .= '<?xml version="1.1" encoding="utf-8"?>'."\n";
-	#return $xml.&object_to_xml($object);
-	return &_objectarray_to_xml([$object]);
+	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes"?>'."\n" : '';
+	return $decl . &_objectarray_to_xml([$object]);
 }
 
 sub _tidy_object {
@@ -297,11 +328,14 @@ Produces a raw XML string from either an array reference, a hash reference or a 
     [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
     { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
 
+Optional flags: C<complete>
+
 =cut
 
 sub simple_to_xml {
 	my $arref = shift;
-	if ($arref eq 'XML::MyXML') { $arref = shift; }
+	if ($arref eq 'XML::MyXML') { confess "Incorrect usage of function: XML::MyXML->simple_to_xml. Replace -> with ::"; }
+	my $flags = shift || {};
 
 	my $xml = '';
 	my ($key, $value, @residue) = (ref $arref eq 'HASH') ? %$arref : @$arref;
@@ -314,7 +348,8 @@ sub simple_to_xml {
 	} else {
 		$xml .= "<$key>"._arrayref_to_xml($value)."</$key>";
 	}
-	return $xml;
+	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes"?>'."\n" : '';
+	return $decl . $xml;
 }
 
 
@@ -365,15 +400,7 @@ Produces a very simple hash object from the raw XML string provided. An example 
 
 Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
 
-You can use flags like this: S<C<< &xml_to_simple($raw_xml, {strip => 1, internal => 1, ...}) >>>.
-
-If called with the 'C<internal>' flag, then the hashref returned will be the first value of the hashref that would otherwise be returned, i.e. a hashref created only by the contents of the top element in the XML and which doesn't contain information about the top-level tag (See L</SYNOPSIS> section for an example)
-
-If called with the 'C<strip>' flag, all text contents will be stripped of possible beginning and/or ending whitespace.
-
-If called with the 'C<file>' flag, then the function's first parameter should be the path to an XML file, instead of being an XML string.
-
-If called with the 'C<soft>' flag, the function will return undef instead of dying (in case of error)
+Optional flags: C<internal>, C<strip>, C<file>, C<soft>
 
 =cut
 
@@ -418,7 +445,9 @@ sub _objectarray_to_simple {
 
 =head2 check_xml($raw_xml)
 
-Returns 1 if the $raw_xml string is valid XML (valid enough to be used by this module), and 0 otherwise. Can be used with the C<file> flag. (See L<xml_to_simple|/xml_to_simple($raw_xml)> for meaning and example of this flag)
+Returns 1 if the $raw_xml string is valid XML (valid enough to be used by this module), and 0 otherwise.
+
+Optional flags: C<file>
 
 =cut
 
@@ -488,7 +517,7 @@ sub path {
 
 When the element represented by the $obj object has only text contents, returns those contents as a string. If the $obj element has no contents, value will return an empty string.
 
-Can be used with the C<strip> flag (as in: S<C<< $obj->value({ strip => 1 }) >>>) to strip possible whitespace in the beginning and end of the value.
+Optional flags: C<strip>
 
 =cut
 
@@ -537,7 +566,9 @@ sub tag {
 
 =head2 $obj->simplify
 
-Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply. May be called with the C<internal> and/or C<strip> flags (for more on these flags, see this documentation on the L<xml_to_simple|/xml_to_simple($raw_xml)> function)
+Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply.
+
+Optional flags: C<internal>, C<strip>
 
 =cut
 
@@ -555,25 +586,31 @@ sub simplify {
 
 Returns the XML string of the object, just like calling C<&object_to_xml( $obj )>
 
+Optional flags: C<complete>
+
 =cut
 
 sub to_xml {
 	my $self = shift;
+	my $flags = shift || {};
 	
-	return XML::MyXML::object_to_xml($self);
+	return XML::MyXML::object_to_xml($self, { complete => $flags->{'complete'} } );
 }
 
 =head2 $obj->to_tidy_xml
 
 Returns the XML string of the object in tidy form, just like calling C<&tidy_xml( &object_to_xml( $obj ) )>
 
+Optional flags: C<complete>
+
 =cut
 
 sub to_tidy_xml {
 	my $self = shift;
+	my $flags = shift || {};
 	
 	my $xml = XML::MyXML::object_to_xml($self);
-	return XML::MyXML::tidy_xml($xml);
+	return XML::MyXML::tidy_xml($xml, { complete => $flags->{'complete'} } );
 }
 
 
@@ -621,7 +658,7 @@ L<http://search.cpan.org/dist/XML-MyXML>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2006 Alexander Karelas, all rights reserved.
+Copyright 2006-2007 Alexander Karelas, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
