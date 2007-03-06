@@ -1,5 +1,10 @@
 Revision history for XML-MyXML
 
+0.095   Mar 6th, 2007
+        Added support for parsing the simplest and non-recursive form of <!ENTITY> markup
+		Added optional 'tidy' flag to &object_to_xml, &simple_to_xml and ->to_xml
+        Corrected bug where hex numerical entities couldn't contain capital letters ('A'..'F')
+
 0.094   Mar 6th, 2007
         Added a space before the '?>' mark in the XML declaration introduced in 0.093
         Corrected small bits in documentation

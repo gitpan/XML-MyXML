@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use utf8;
 use Carp;
+use Data::Dumper;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple check_xml);
@@ -14,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.094
+Version 0.095
 
 =cut
 
-our $VERSION = '0.094';
+our $VERSION = '0.095';
 
 =head1 SYNOPSIS
 
@@ -44,17 +45,17 @@ A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 FEATURES & LIMITATIONS
 
-This module can parse XML comments, CDATA sections, and XML entities (the standard five and numeric ones)
+This module can parse XML comments, CDATA sections, XML entities (the standard five and numeric ones) and simple non-recursive C<< <!ENTITY> >>s
 
-It will ignore (won't parse) <!DOCTYPE...>, <?...?> and other <!...> special markup
+It will ignore (won't parse) C<< <!DOCTYPE...> >>, C<< <?...?> >> and other C<< <!...> >> special markup
 
-Parsed documents must be UTF-8 encoded, as will all XML documents produced by this module
+Parsed documents must be UTF-8 encoded, as will all XML documents produced by this module be
 
-Attribute values in XML documents to be parsed, may not contain the C<< > >> character unencoded
+XML documents to be parsed may not contain the C<< > >> character unencoded in attribute values
 
 =head1 FUNCTION FLAGS
 
-Some functions and methods in this module accept flags, listed under each function in the documentation. They are optional, default to zero unless stated otherwise, and can be used as follows: S<C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>>. This is what they do when set:
+Some functions and methods in this module accept optional flags, listed under each function in the documentation. They are optional, default to zero unless stated otherwise, and can be used as follows: S<C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>>. This is what each flag does:
 
 C<strip> : the function will strip initial and ending whitespace from all text values returned
 
@@ -66,7 +67,9 @@ C<soft> : the function will return undef instead of dying in case of a error dur
 
 C<internal> : the function will only return the contents of an element in a hashref instead of the element itself (see L</SYNOPSIS> for example)
 
-C<indentstring> : this is the string with which child elements will be indented when creating tidy XML (Defaults to the 'tab' character)
+C<tidy> : the function will return tidy XML
+
+C<indentstring> : when producing tidy XML, this denotes the string with which child elements will be indented (Default is the 'tab' character)
 
 =head1 FUNCTIONS
 
@@ -74,6 +77,7 @@ C<indentstring> : this is the string with which child elements will be indented 
 
 sub _encode {
 	my $string = shift;
+	my $entities = shift || {};
 	defined $string or $string = '';
 	my %replace = 	(
 					'<' => '&lt;', 
@@ -82,24 +86,32 @@ sub _encode {
 					'\'' => '&apos;',
 					'"' => '&quot;',
 					);
-	my $keys = "(".join("|", keys %replace).")";
+	my $keys = "(".join("|", sort {length($b) <=> length($a)} keys %replace).")";
 	$string =~ s/$keys/$replace{$1}/g;
 	return $string;
 }
 
 sub _decode {
 	my $string = shift;
+	my $entities = shift || {};
+	my $flags = shift || {};
 	defined $string or $string = '';
-	$string =~ s/\&\#x([0-9a-f]+)\;/chr(hex($1))/eg;
-	$string =~ s/\&\#([0-9]+)\;/chr($1)/eg;
-	my %replace = 	(
+	my %replace = reverse (
+					(reverse (%$entities)),
 					'<' => '&lt;', 
 					'>' => '&gt;', 
 					'&' => '&amp;',
 					'\'' => '&apos;',
 					'"' => '&quot;',
-					);
-	%replace = reverse %replace;
+	);
+	# Check for unknown entities
+	#{
+	#	my @things = $string =~ /\&[^\s\;]*\;/g;
+	#	confess "Error: Don't know how to decode entity '$_'"
+	#		foreach grep {! exists $replace{$_} and $_ !~ /\&\#[0-9]+\;/ and $_ !~ /\&\#x[0-9a-f]+\;/i} @things;
+	#}
+	$string =~ s/\&\#x([0-9a-f]+)\;/chr(hex($1))/egi;
+	$string =~ s/\&\#([0-9]+)\;/chr($1)/eg;
 	my $keys = "(".join("|", keys %replace).")";
 	$string =~ s/$keys/$replace{$1}/g;
 	return $string;
@@ -152,6 +164,8 @@ sub xml_to_object {
 		close FILE;
 	}
 
+	my $entities = {};
+
 	# Parse CDATA sections
 	$xml =~ s/<\!\[CDATA\[(.*?)\]\]>/&_encode($1)/egs;
 	my @els = $xml =~ /(<!--.*?(?:-->|$)|<[^>]*?>|[^<>]+)/sg;
@@ -164,6 +178,9 @@ sub xml_to_object {
 				undef $el;
 			} elsif ($el =~ /^<\?/) { # like <?xml?> or <?target?>
 				if ($el !~ /\?>$/) { confess "Error: Erroneous special markup - '$el'" unless $soft; return undef; }
+				undef $el;
+			} elsif (my ($entname, undef, $entvalue) = $el =~ /^<!ENTITY\s+(\S+)\s+(['"])(.*?)\2\s*>$/g) {
+				$entities->{"&$entname;"} = _decode($entvalue);
 				undef $el;
 			} elsif ($el =~ /<!/) { # like <!DOCTYPE> or <!ELEMENT> or <!ATTLIST>
 				undef $el;
@@ -206,7 +223,7 @@ sub xml_to_object {
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
 				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $soft; return undef; }
-				$attr{$name} = &_decode($value);
+				$attr{$name} = &_decode($value, $entities);
 			}
 			my $entry = { element => $element, attrs => \%attr, parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
@@ -224,7 +241,7 @@ sub xml_to_object {
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
 				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $soft; return undef; }
-				$attr{$name} = &_decode($value);
+				$attr{$name} = &_decode($value, $entities);
 			}
 			my $entry = { element => $element, attrs => \%attr, content => [], parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
@@ -232,7 +249,7 @@ sub xml_to_object {
 			push @{$pointer->{'content'}}, $entry;
 			$pointer = $entry;
 		} elsif ($el =~ /^[^<>]*$/) {
-			my $entry = { value => &_decode($el), parent => $pointer };
+			my $entry = { value => &_decode($el, $entities), parent => $pointer };
 			bless $entry, 'XML::MyXML::Object';
 			push @{$pointer->{'content'}}, $entry;
 		} else {
@@ -273,7 +290,7 @@ sub _objectarray_to_xml {
 
 Creates an XML string from the 'XML::MyXML::Object' object provided
 
-Optional flags: C<complete>
+Optional flags: C<complete>, C<tidy>, C<indentstring>
 
 =cut
 
@@ -329,7 +346,7 @@ Produces a raw XML string from either an array reference, a hash reference or a 
     [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
     { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
 
-Optional flags: C<complete>
+Optional flags: C<complete>, C<tidy>, C<indentstring>
 
 =cut
 
@@ -349,6 +366,7 @@ sub simple_to_xml {
 	} else {
 		$xml .= "<$key>"._arrayref_to_xml($value)."</$key>";
 	}
+	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml); }
 	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
 	return $decl . $xml;
 }
@@ -587,7 +605,7 @@ sub simplify {
 
 Returns the XML string of the object, just like calling C<&object_to_xml( $obj )>
 
-Optional flags: C<complete>
+Optional flags: C<complete>, C<tidy>, C<indentstring>
 
 =cut
 
@@ -596,7 +614,9 @@ sub to_xml {
 	my $flags = shift || {};
 	
 	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
-	return $decl . &XML::MyXML::_objectarray_to_xml([$self]);
+	my $xml = &XML::MyXML::_objectarray_to_xml([$self]);
+	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml, $flags); }
+	return $decl . $xml;
 }
 
 =head2 $obj->to_tidy_xml
