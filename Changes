@@ -1,5 +1,9 @@
 Revision history for XML-MyXML
 
+0.096   Mar 6th, 2007
+        Added ability for the following functions/methods to save their XML output to a file: &tidy_xml, &object_to_xml, &simple_to_xml, ->to_xml, ->to_tidy_xml
+        Added the 'soft' flag to &tidy_xml
+
 0.0951  Mar 6th, 2007
         Corrected bug where ->value would double-decode
 

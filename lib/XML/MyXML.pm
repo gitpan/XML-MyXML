@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0951
+Version 0.096
 
 =cut
 
-our $VERSION = '0.0951';
+our $VERSION = '0.096';
 
 =head1 SYNOPSIS
 
@@ -53,7 +53,7 @@ Parsed documents must be UTF-8 encoded, as will all XML documents produced by th
 
 XML documents to be parsed may not contain the C<< > >> character unencoded in attribute values
 
-=head1 FUNCTION FLAGS
+=head1 OPTIONAL FUNCTION FLAGS
 
 Some functions and methods in this module accept optional flags, listed under each function in the documentation. They are optional, default to zero unless stated otherwise, and can be used as follows: S<C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>>. This is what each flag does:
 
@@ -70,6 +70,8 @@ C<internal> : the function will only return the contents of an element in a hash
 C<tidy> : the function will return tidy XML
 
 C<indentstring> : when producing tidy XML, this denotes the string with which child elements will be indented (Default is the 'tab' character)
+
+C<save> : the function (apart from doing what it's supposed to do) will save its XML output in a file whose path is denoted by this flag (Default is C<undef>)
 
 =head1 FUNCTIONS
 
@@ -127,7 +129,7 @@ sub _strip {
 
 Returns the XML string in a tidy format (with tabs & newlines)
 
-Optional flags: C<file>, C<complete>, C<indentstring>
+Optional flags: C<file>, C<complete>, C<indentstring>, C<soft>, C<save>
 
 =cut
 
@@ -137,9 +139,10 @@ sub tidy_xml {
 	if ($xml eq 'XML::MyXML') { $xml = shift; }
 	my $flags = shift || {};
 
-	my $object = &xml_to_object($xml);
+	my $object = &xml_to_object($xml, $flags);
+	defined $object or return $object;
 	&_tidy_object($object, undef, $flags);
-	return &object_to_xml($object, $flags);
+	return $object->to_xml({ %$flags, tidy => 0 }) . "\n";
 }
 
 
@@ -290,7 +293,7 @@ sub _objectarray_to_xml {
 
 Creates an XML string from the 'XML::MyXML::Object' object provided
 
-Optional flags: C<complete>, C<tidy>, C<indentstring>
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>
 
 =cut
 
@@ -346,7 +349,7 @@ Produces a raw XML string from either an array reference, a hash reference or a 
     [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
     { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
 
-Optional flags: C<complete>, C<tidy>, C<indentstring>
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>
 
 =cut
 
@@ -368,7 +371,15 @@ sub simple_to_xml {
 	}
 	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml); }
 	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
-	return $decl . $xml;
+	$xml = $decl . $xml;
+
+	if (defined $flags->{'save'}) {
+		open FILE, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
+		print FILE $xml;
+		close FILE;
+	}
+
+	return $xml;
 }
 
 
@@ -605,7 +616,7 @@ sub simplify {
 
 Returns the XML string of the object, just like calling C<&object_to_xml( $obj )>
 
-Optional flags: C<complete>, C<tidy>, C<indentstring>
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>
 
 =cut
 
@@ -615,24 +626,30 @@ sub to_xml {
 	
 	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
 	my $xml = &XML::MyXML::_objectarray_to_xml([$self]);
-	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml, $flags); }
-	return $decl . $xml;
+	if ($flags->{'tidy'}) { $xml = &XML::MyXML::tidy_xml($xml, { %$flags, complete => 0, save => undef }); }
+	$xml = $decl . $xml;
+	if (defined $flags->{'save'}) {
+		open FILE, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
+		print FILE $xml;
+		close FILE;
+	}
+	return $xml;
 }
 
 =head2 $obj->to_tidy_xml
 
 Returns the XML string of the object in tidy form, just like calling C<&tidy_xml( &object_to_xml( $obj ) )>
 
-Optional flags: C<complete>, C<indentstring>
+Optional flags: C<complete>, C<indentstring>, C<save>
 
 =cut
 
 sub to_tidy_xml {
 	my $self = shift;
 	my $flags = shift || {};
-	
-	my $xml = XML::MyXML::object_to_xml($self);
-	return XML::MyXML::tidy_xml($xml, $flags);
+
+	$flags->{'tidy'} = 1;
+	return $self->to_xml( $flags );
 }
 
 
