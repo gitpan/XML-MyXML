@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.095
+Version 0.0951
 
 =cut
 
-our $VERSION = '0.095';
+our $VERSION = '0.0951';
 
 =head1 SYNOPSIS
 
@@ -63,7 +63,7 @@ C<file> : the function will expect the path to a file containing an XML document
 
 C<complete> : the function's XML output will include an XML declaration (C<< <?xml ... ?>  >>) in the beginning
 
-C<soft> : the function will return undef instead of dying in case of a error during XML parsing
+C<soft> : the function will return undef instead of dying in case of an error during XML parsing
 
 C<internal> : the function will only return the contents of an element in a hashref instead of the element itself (see L</SYNOPSIS> for example)
 
@@ -180,7 +180,7 @@ sub xml_to_object {
 				if ($el !~ /\?>$/) { confess "Error: Erroneous special markup - '$el'" unless $soft; return undef; }
 				undef $el;
 			} elsif (my ($entname, undef, $entvalue) = $el =~ /^<!ENTITY\s+(\S+)\s+(['"])(.*?)\2\s*>$/g) {
-				$entities->{"&$entname;"} = _decode($entvalue);
+				$entities->{"&$entname;"} = &_decode($entvalue);
 				undef $el;
 			} elsif ($el =~ /<!/) { # like <!DOCTYPE> or <!ELEMENT> or <!ATTLIST>
 				undef $el;
@@ -546,7 +546,7 @@ sub value {
 
 	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
 
-	my $value = &XML::MyXML::_decode($self->{'content'}[0]{'value'});
+	my $value = $self->{'content'}[0]{'value'};
 	if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
 	return $value;
 }
