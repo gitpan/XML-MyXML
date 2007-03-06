@@ -14,11 +14,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.093
+Version 0.094
 
 =cut
 
-our $VERSION = '0.093';
+our $VERSION = '0.094';
 
 =head1 SYNOPSIS
 
@@ -44,27 +44,29 @@ A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 FEATURES & LIMITATIONS
 
-This module can handle XML comments, CDATA sections, and XML entities (the standard five as well as numeric (dec & hex) ones)
+This module can parse XML comments, CDATA sections, and XML entities (the standard five and numeric ones)
 
-But it will ignore (won't parse) <!DOCTYPE...> and <?...?> special markup
+It will ignore (won't parse) <!DOCTYPE...>, <?...?> and other <!...> special markup
 
-Parsed documents must have the UTF-8 encoding, as all XML documents produced by this module will
+Parsed documents must be UTF-8 encoded, as will all XML documents produced by this module
 
-Attribute values may not contain the C<< > >> character
+Attribute values in XML documents to be parsed, may not contain the C<< > >> character unencoded
 
 =head1 FUNCTION FLAGS
 
-Some functions or methods in this module accept flags, listed under each function in the documentation. They are optional, default to zero, and can be used as follows: C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>. What they do when set is this:
+Some functions and methods in this module accept flags, listed under each function in the documentation. They are optional, default to zero unless stated otherwise, and can be used as follows: S<C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>>. This is what they do when set:
 
 C<strip> : the function will strip initial and ending whitespace from all text values returned
 
 C<file> : the function will expect the path to a file containing an XML document to parse, instead of an XML string
 
-C<complete> : the function's XML output will include an XML declaration in the beginning
+C<complete> : the function's XML output will include an XML declaration (C<< <?xml ... ?>  >>) in the beginning
 
 C<soft> : the function will return undef instead of dying in case of a error during XML parsing
 
-C<internal> : the function will only return the contents of an element in a hashref instead of the element itself (see L</SYNOPISIS> for example)
+C<internal> : the function will only return the contents of an element in a hashref instead of the element itself (see L</SYNOPSIS> for example)
+
+C<indentstring> : this is the string with which child elements will be indented when creating tidy XML (Defaults to the 'tab' character)
 
 =head1 FUNCTIONS
 
@@ -113,7 +115,7 @@ sub _strip {
 
 Returns the XML string in a tidy format (with tabs & newlines)
 
-Optional flags: C<file>, C<complete>
+Optional flags: C<file>, C<complete>, C<indentstring>
 
 =cut
 
@@ -125,7 +127,7 @@ sub tidy_xml {
 
 	my $object = &xml_to_object($xml);
 	&_tidy_object($object, undef, $flags);
-	return &object_to_xml($object, { complete => $flags->{'complete'} });
+	return &object_to_xml($object, $flags);
 }
 
 
@@ -279,8 +281,7 @@ sub object_to_xml {
 	my $object = shift;
 	my $flags = shift || {};
 
-	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes"?>'."\n" : '';
-	return $decl . &_objectarray_to_xml([$object]);
+	return $object->to_xml( $flags );
 }
 
 sub _tidy_object {
@@ -288,7 +289,7 @@ sub _tidy_object {
 	my $tabs = shift || 0;
 	my $flags = shift || {};
 
-	if (! exists $flags->{'indentstring'}) { $flags->{'indentstring'} = "\t" }
+	$flags->{'indentstring'} = "\t" unless exists $flags->{'indentstring'};
 
 	if (! defined $object->{'content'} or ! @{$object->{'content'}}) { return; }
 	my $hastext;
@@ -348,7 +349,7 @@ sub simple_to_xml {
 	} else {
 		$xml .= "<$key>"._arrayref_to_xml($value)."</$key>";
 	}
-	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes"?>'."\n" : '';
+	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
 	return $decl . $xml;
 }
 
@@ -547,7 +548,7 @@ sub attr {
 
 =head2 $obj->tag
 
-Returns the tag of the $obj element (after stripping it from namespaces). E.g. if $obj represents an <rss:item> element, C<< $obj->tag >> will just return the name iitem'.
+Returns the tag of the $obj element (after stripping it from namespaces). E.g. if $obj represents an <rss:item> element, C<< $obj->tag >> will just return the name 'item'.
 Returns undef if $obj doesn't represent a tag.
 
 =cut
@@ -594,14 +595,15 @@ sub to_xml {
 	my $self = shift;
 	my $flags = shift || {};
 	
-	return XML::MyXML::object_to_xml($self, { complete => $flags->{'complete'} } );
+	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
+	return $decl . &XML::MyXML::_objectarray_to_xml([$self]);
 }
 
 =head2 $obj->to_tidy_xml
 
 Returns the XML string of the object in tidy form, just like calling C<&tidy_xml( &object_to_xml( $obj ) )>
 
-Optional flags: C<complete>
+Optional flags: C<complete>, C<indentstring>
 
 =cut
 
@@ -610,7 +612,7 @@ sub to_tidy_xml {
 	my $flags = shift || {};
 	
 	my $xml = XML::MyXML::object_to_xml($self);
-	return XML::MyXML::tidy_xml($xml, { complete => $flags->{'complete'} } );
+	return XML::MyXML::tidy_xml($xml, $flags);
 }
 
 

@@ -1,10 +1,15 @@
 Revision history for XML-MyXML
 
+0.094   Mar 6th, 2007
+        Added a space before the '?>' mark in the XML declaration introduced in 0.093
+        Corrected small bits in documentation
+
 0.093   Mar 5th, 2007
         Parser will now ignore all special markup instead of dying on it (except for CDATA sections which it can handle since v0.061)
-		XML documents produced with this module may now have an XML declaration in the beginning (<?xml ... ?>)
-		Wrote features & limitations in the documentation
-		Wrote a 'function flags' section in the documentation
+        XML documents produced with this module may now have an XML declaration in the beginning (<?xml ... ?>)
+		Almost all functions and methods accept flags now
+        Wrote features & limitations in the documentation
+        Wrote a 'function flags' section in the documentation
 
 0.092   Mar 5th, 2007
         check_xml, which used to be able to check XML strings only, can now check XML files also
