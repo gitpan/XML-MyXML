@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.096
+Version 0.0961
 
 =cut
 
-our $VERSION = '0.096';
+our $VERSION = '0.0961';
 
 =head1 SYNOPSIS
 
@@ -369,7 +369,7 @@ sub simple_to_xml {
 	} else {
 		$xml .= "<$key>"._arrayref_to_xml($value)."</$key>";
 	}
-	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml); }
+	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml, { $flags->{'indentstring'} ? (indentstring => $flags->{'indentstring'}) : () }); }
 	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
 	$xml = $decl . $xml;
 
