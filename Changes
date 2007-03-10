@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0968  Mar 9th, 2007
+        Added the 'strip_ns' flag, that strips namespaces from tags, on &xml_to_simple and on ->simplify
+
 0.0961  Mar 7th, 2007
         Corrected bug where the indentstring flag on &simple_to_xml wouldn't do anything
 
@@ -22,7 +25,7 @@ Revision history for XML-MyXML
 0.093   Mar 5th, 2007
         Parser will now ignore all special markup instead of dying on it (except for CDATA sections which it can handle since v0.061)
         XML documents produced with this module may now have an XML declaration in the beginning (<?xml ... ?>)
-		Almost all functions and methods accept flags now
+        Almost all functions and methods accept flags now
         Wrote features & limitations in the documentation
         Wrote a 'function flags' section in the documentation
 

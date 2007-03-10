@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0961
+Version 0.0968
 
 =cut
 
-our $VERSION = '0.0961';
+our $VERSION = '0.0968';
 
 =head1 SYNOPSIS
 
@@ -73,6 +73,8 @@ C<indentstring> : when producing tidy XML, this denotes the string with which ch
 
 C<save> : the function (apart from doing what it's supposed to do) will save its XML output in a file whose path is denoted by this flag (Default is C<undef>)
 
+C<strip_ns> : strip the namespaces (characters up to an including ':') from the tags
+
 =head1 FUNCTIONS
 
 =cut
@@ -123,6 +125,12 @@ sub _strip {
 	my $string = shift;
 
 	return defined $string ? ($string =~ /^\s*(.*?)\s*$/s)[0] : $string;
+}
+
+sub _strip_ns {
+	my $string = shift;
+
+	return defined $string ? ($string =~ /^(?:.+\:)?(.*)$/s)[0] : $string;
 }
 
 =head2 tidy_xml($raw_xml)
@@ -457,7 +465,9 @@ sub _objectarray_to_simple {
 
 	foreach my $stuff (@$object) {
 		if (defined $stuff->{'element'}) {
-			$hashref->{ $stuff->{'element'} } = &_objectarray_to_simple($stuff->{'content'}, $flags);
+			my $key = $stuff->{'element'};
+			if ($flags->{'strip_ns'}) { $key = &XML::MyXML::_strip_ns($key); }
+			$hashref->{ $key } = &_objectarray_to_simple($stuff->{'content'}, $flags);
 		} elsif (defined $stuff->{'value'}) {
 			my $value = $stuff->{'value'};
 			if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
@@ -598,7 +608,7 @@ sub tag {
 
 Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply.
 
-Optional flags: C<internal>, C<strip>
+Optional flags: C<internal>, C<strip>, C<strip_ns>
 
 =cut
 
