@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0968
+Version 0.0969
 
 =cut
 
-our $VERSION = '0.0968';
+our $VERSION = '0.0969';
 
 =head1 SYNOPSIS
 
@@ -73,7 +73,7 @@ C<indentstring> : when producing tidy XML, this denotes the string with which ch
 
 C<save> : the function (apart from doing what it's supposed to do) will save its XML output in a file whose path is denoted by this flag (Default is C<undef>)
 
-C<strip_ns> : strip the namespaces (characters up to an including ':') from the tags
+C<strip_ns> : strip the namespaces (characters up to and including ':') from the tags
 
 =head1 FUNCTIONS
 
@@ -373,12 +373,12 @@ sub simple_to_xml {
 	confess "Error: Strange key: $key" if ! defined $tag;
 
 	if (! ref $value) {
-		$xml .= "<$key>"._encode($value)."</$key>";
+		$xml .= "<$key>"._encode($value)."</$tag>";
 	} else {
-		$xml .= "<$key>"._arrayref_to_xml($value)."</$key>";
+		$xml .= "<$key>"._arrayref_to_xml($value)."</$tag>";
 	}
 	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml, { $flags->{'indentstring'} ? (indentstring => $flags->{'indentstring'}) : () }); }
-	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
+	my $decl = $flags->{'complete'} ? '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
 	$xml = $decl . $xml;
 
 	if (defined $flags->{'save'}) {
@@ -438,7 +438,7 @@ Produces a very simple hash object from the raw XML string provided. An example 
 
 Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
 
-Optional flags: C<internal>, C<strip>, C<file>, C<soft>
+Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>
 
 =cut
 

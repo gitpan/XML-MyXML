@@ -1,5 +1,9 @@
 Revision history for XML-MyXML
 
+0.0969  Mar 17th, 2007
+        Fixed bug where simple_to_xml wouldn't accept attributes at the root element
+        Fixed XML version in declaration from 1.1 to 1.0
+
 0.0968  Mar 9th, 2007
         Added the 'strip_ns' flag, that strips namespaces from tags, on &xml_to_simple and on ->simplify
 
