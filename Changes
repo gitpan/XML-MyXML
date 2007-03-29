@@ -1,5 +1,10 @@
 Revision history for XML-MyXML
 
+0.097   Mar 24th, 2007
+        &simple_to_xml can add xslt declarations in the beginning
+        &xml_to_ximple and ->simplify can create arrayrefs in addition to hashrefs (arrayrefs preserve order and duplicate elements)
+        Fixed bug where &xml_to_object would choke with some symbols in utf8::upgrade'd XML strings
+
 0.0969  Mar 17th, 2007
         Fixed bug where simple_to_xml wouldn't accept attributes at the root element
         Fixed XML version in declaration from 1.1 to 1.0

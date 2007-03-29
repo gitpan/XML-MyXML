@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0969
+Version 0.097
 
 =cut
 
-our $VERSION = '0.0969';
+our $VERSION = '0.097';
 
 =head1 SYNOPSIS
 
@@ -71,9 +71,13 @@ C<tidy> : the function will return tidy XML
 
 C<indentstring> : when producing tidy XML, this denotes the string with which child elements will be indented (Default is the 'tab' character)
 
-C<save> : the function (apart from doing what it's supposed to do) will save its XML output in a file whose path is denoted by this flag (Default is C<undef>)
+C<save> : the function (apart from doing what it's supposed to do) will also save its XML output in a file whose path is denoted by this flag
 
 C<strip_ns> : strip the namespaces (characters up to and including ':') from the tags
+
+C<xslt> : will add a <?xml-stylesheet?> link in the XML that's being output, of type 'text/xsl', pointing to the filename or URL denoted by this flag
+
+C<arrayref> : the function will create a simple arrayref instead of a simple hashref (which will preserve order and elements with duplicate tags)
 
 =head1 FUNCTIONS
 
@@ -164,7 +168,6 @@ Optional flags: C<file>, C<soft>
 
 sub xml_to_object {
 	my $xml = shift;
-	if ($xml eq 'XML::MyXML') { $xml = shift; }
 	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
 
 	my $soft = $flags->{'soft'}; # soft = 'don't die if can't parse, just return undef'
@@ -174,6 +177,8 @@ sub xml_to_object {
 		$xml = join '', <FILE>;
 		close FILE;
 	}
+
+	utf8::downgrade($xml);
 
 	my $entities = {};
 
@@ -357,7 +362,7 @@ Produces a raw XML string from either an array reference, a hash reference or a 
     [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
     { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
 
-Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<xslt>
 
 =cut
 
@@ -375,10 +380,11 @@ sub simple_to_xml {
 	if (! ref $value) {
 		$xml .= "<$key>"._encode($value)."</$tag>";
 	} else {
-		$xml .= "<$key>"._arrayref_to_xml($value)."</$tag>";
+		$xml .= "<$key>"._arrayref_to_xml($value, $flags)."</$tag>";
 	}
 	if ($flags->{'tidy'}) { $xml = &tidy_xml($xml, { $flags->{'indentstring'} ? (indentstring => $flags->{'indentstring'}) : () }); }
 	my $decl = $flags->{'complete'} ? '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
+	$decl .= "<?xml-stylesheet type=\"text/xsl\" href=\"$flags->{'xslt'}\"?>\n" if $flags->{'xslt'};
 	$xml = $decl . $xml;
 
 	if (defined $flags->{'save'}) {
@@ -393,10 +399,11 @@ sub simple_to_xml {
 
 sub _arrayref_to_xml {
 	my $arref = shift;
+	my $flags = shift || {};
 
 	my $xml = '';
 
-	if (ref $arref eq 'HASH') { return _hashref_to_xml($arref); }
+	if (ref $arref eq 'HASH') { return _hashref_to_xml($arref, $flags); }
 
 	while (@$arref) {
 		my $key = shift @$arref;
@@ -404,10 +411,12 @@ sub _arrayref_to_xml {
 		confess "Error: Strange key: $key" if ! defined $tag;
 		my $value = shift @$arref;
 
-		if (! ref $value) {
+		if ($key eq '!as_is') {
+			$xml .= $value if &check_xml($value);
+		} elsif (! ref $value) {
 			$xml .= "<$key>"._encode($value)."</$tag>";
 		} else {
-			$xml .= "<$key>"._arrayref_to_xml($value)."</$tag>";
+			$xml .= "<$key>"._arrayref_to_xml($value, $flags)."</$tag>";
 		}
 	}
 	return $xml;
@@ -416,6 +425,7 @@ sub _arrayref_to_xml {
 
 sub _hashref_to_xml {
 	my $hashref = shift;
+	my $flags = shift || {};
 
 	my $xml = '';
 
@@ -423,10 +433,12 @@ sub _hashref_to_xml {
 		my ($tag) = $key =~ /^(\S+)/g;
 		confess "Error: Strange key: $key" if ! defined $tag;
 
-		if (! ref $value) {
+		if ($key eq '!as_is') {
+			$xml .= $value if &check_xml($value);
+		} elsif (! ref $value) {
 			$xml .= "<$key>"._encode($value)."</$tag>";
 		} else {
-			$xml .= "<$key>"._arrayref_to_xml($value)."</$tag>";
+			$xml .= "<$key>"._arrayref_to_xml($value, $flags)."</$tag>";
 		}
 	}
 	return $xml;
@@ -438,7 +450,7 @@ Produces a very simple hash object from the raw XML string provided. An example 
 
 Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
 
-Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>
+Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>, C<arrayref>
 
 =cut
 
@@ -454,6 +466,21 @@ sub xml_to_simple {
 }
 
 sub _objectarray_to_simple {
+	my $object = shift;
+	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
+
+	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
+
+	if (! defined $object) { return undef; }
+
+	if ($flags->{'arrayref'}) {
+		return &_objectarray_to_simple_arrayref($object, $flags);
+	} else {
+		return &_objectarray_to_simple_hashref($object, $flags);
+	}
+}
+
+sub _objectarray_to_simple_hashref {
 	my $object = shift;
 	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
 
@@ -477,6 +504,36 @@ sub _objectarray_to_simple {
 
 	if (keys %$hashref) {
 		return $hashref;
+	} else {
+		return undef;
+	}
+}
+
+sub _objectarray_to_simple_arrayref {
+	my $object = shift;
+	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
+
+	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
+
+	if (! defined $object) { return undef; }
+
+	my $arrayref = [];
+
+	foreach my $stuff (@$object) {
+		if (defined $stuff->{'element'}) {
+			my $key = $stuff->{'element'};
+			if ($flags->{'strip_ns'}) { $key = &XML::MyXML::_strip_ns($key); }
+			push @$arrayref, ( $key, &_objectarray_to_simple($stuff->{'content'}, $flags) );
+			#$hashref->{ $key } = &_objectarray_to_simple($stuff->{'content'}, $flags);
+		} elsif (defined $stuff->{'value'}) {
+			my $value = $stuff->{'value'};
+			if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
+			return $value if $value =~ /\S/;
+		}
+	}
+
+	if (@$arrayref) {
+		return $arrayref;
 	} else {
 		return undef;
 	}
@@ -608,7 +665,7 @@ sub tag {
 
 Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply.
 
-Optional flags: C<internal>, C<strip>, C<strip_ns>
+Optional flags: C<internal>, C<strip>, C<strip_ns>, C<arrayref>
 
 =cut
 
@@ -619,7 +676,15 @@ sub simplify {
 	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
 
 	my $simple = &XML::MyXML::_objectarray_to_simple([$self], $flags);
-	if (! $flags->{'internal'}) { return $simple } else { return (values %$simple)[0] }
+	if (! $flags->{'internal'}) {
+		return $simple;
+	} else {
+		if (ref $simple eq 'HASH') {
+			return (values %$simple)[0];
+		} elsif (ref $simple eq 'ARRAY') {
+			return $simple->[1];
+		}
+	}
 }
 
 =head2 $obj->to_xml
