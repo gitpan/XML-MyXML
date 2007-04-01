@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0971  Apr 1st, 2007
+        Fixed bug where simple arrayref structures would get 'consumed' by &simple_to_xml
+
 0.097   Mar 24th, 2007
         &simple_to_xml can add xslt declarations in the beginning
         &xml_to_ximple and ->simplify can create arrayrefs in addition to hashrefs (arrayrefs preserve order and duplicate elements)

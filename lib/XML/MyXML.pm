@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.097
+Version 0.0971
 
 =cut
 
-our $VERSION = '0.097';
+our $VERSION = '0.0971';
 
 =head1 SYNOPSIS
 
@@ -368,7 +368,6 @@ Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<xslt>
 
 sub simple_to_xml {
 	my $arref = shift;
-	if ($arref eq 'XML::MyXML') { confess "Incorrect usage of function: XML::MyXML->simple_to_xml. Replace -> with ::"; }
 	my $flags = shift || {};
 
 	my $xml = '';
@@ -405,11 +404,14 @@ sub _arrayref_to_xml {
 
 	if (ref $arref eq 'HASH') { return _hashref_to_xml($arref, $flags); }
 
-	while (@$arref) {
-		my $key = shift @$arref;
+	foreach (my $i = 0; $i <= $#$arref; ) {
+	#while (@$arref) {
+		my $key = $arref->[$i++];
+		#my $key = shift @$arref;
 		my ($tag) = $key =~ /^(\S+)/g;
 		confess "Error: Strange key: $key" if ! defined $tag;
-		my $value = shift @$arref;
+		my $value = $arref->[$i++];
+		#my $value = shift @$arref;
 
 		if ($key eq '!as_is') {
 			$xml .= $value if &check_xml($value);
