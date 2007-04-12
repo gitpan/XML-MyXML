@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0971
+Version 0.0972
 
 =cut
 
-our $VERSION = '0.0971';
+our $VERSION = '0.0972';
 
 =head1 SYNOPSIS
 
@@ -767,6 +767,10 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=XML-MyXML>
 =item * Search CPAN
 
 L<http://search.cpan.org/dist/XML-MyXML>
+
+=item * Module's RSS feed
+
+L<http://myperl.eu/permodule/XML-MyXML>
 
 =back
 

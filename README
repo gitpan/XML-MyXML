@@ -30,9 +30,12 @@ You can also look for information at:
     CPAN Ratings:
         http://cpanratings.perl.org/d/XML-MyXML
 
+    Module's RSS feed:
+        http://myperl.eu/permodule/XML-MyXML
+
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2006 Alexander Karelas
+Copyright (C) 2006-2007 Alexander Karelas
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
