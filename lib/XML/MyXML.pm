@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0972
+Version 0.0973
 
 =cut
 
-our $VERSION = '0.0972';
+our $VERSION = '0.0973';
 
 =head1 SYNOPSIS
 
@@ -622,13 +622,15 @@ Optional flags: C<strip>
 
 sub value {
 	my $self = shift;
-	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
+	my $flags = shift || {};
 
-	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
-
-	my $value = $self->{'content'}[0]{'value'};
-	if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
-	return $value;
+	if ($self->{'content'} and $self->{'content'}[0]) {
+		my $value = $self->{'content'}[0]{'value'};
+		if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
+		return $value;
+	} else {
+		return undef;
+	}
 }
 
 =head2 $obj->attr('attrname')
