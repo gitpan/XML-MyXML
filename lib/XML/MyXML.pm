@@ -9,17 +9,18 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple check_xml);
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
+use Encode;
 =head1 NAME
 
 XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0974
+Version 0.0975
 
 =cut
 
-our $VERSION = '0.0974';
+our $VERSION = '0.0975';
 
 =head1 SYNOPSIS
 
@@ -178,7 +179,7 @@ sub xml_to_object {
 		close FILE;
 	}
 
-	utf8::encode($xml) if utf8::is_utf8($xml);
+	Encode::_utf8_off($xml);
 
 	my $entities = {};
 
