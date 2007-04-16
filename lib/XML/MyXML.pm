@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.09761
+Version 0.09762
 
 =cut
 
-our $VERSION = '0.09761';
+our $VERSION = '0.09762';
 
 =head1 SYNOPSIS
 
@@ -177,6 +177,7 @@ sub xml_to_object {
 		close FILE;
 	}
 
+	if (! utf8::valid($xml)) { confess "Error: Input string is invalid UTF-8" unless $soft; return undef; }
 	Encode::_utf8_off($xml);
 
 	my $entities = {};

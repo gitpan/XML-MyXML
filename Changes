@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.09762 Apr 16th, 2007
+        Some functions now check whether the provided XML is valid utf-8, and produce an error if it's not
+
 0.09761 Apr 16th, 2007
         Removed some debugging code
 
