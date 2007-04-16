@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0976
+Version 0.09761
 
 =cut
 
-our $VERSION = '0.0976';
+our $VERSION = '0.09761';
 
 =head1 SYNOPSIS
 
@@ -599,10 +599,8 @@ sub children {
 	$tag = '' if ! defined $tag;
 
 	if (length $tag) {
-	print "Hi1";
 		return grep {defined $_->{'element'} and $_->{'element'} =~ /(^|\:)\Q$tag\E$/} @{$self->{'content'}};
 	} else {
-	print "Hi2";
 		return grep { defined $_->{'element'} } @{$self->{'content'}};
 	}
 }
