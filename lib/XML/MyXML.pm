@@ -15,11 +15,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0973
+Version 0.0974
 
 =cut
 
-our $VERSION = '0.0973';
+our $VERSION = '0.0974';
 
 =head1 SYNOPSIS
 
@@ -178,7 +178,7 @@ sub xml_to_object {
 		close FILE;
 	}
 
-	utf8::downgrade($xml);
+	utf8::encode($xml) if utf8::is_utf8($xml);
 
 	my $entities = {};
 

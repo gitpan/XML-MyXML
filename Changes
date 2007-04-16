@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0974  Apr 16th, 2007
+        Fixed encoding issue
+
 0.0973  Apr 15th, 2007
         Fixed a critical bug where calling the 'value' method on an empty element would change its contents
 
