@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0975
+Version 0.0976
 
 =cut
 
-our $VERSION = '0.0975';
+our $VERSION = '0.0976';
 
 =head1 SYNOPSIS
 
@@ -80,6 +80,8 @@ C<xslt> : will add a <?xml-stylesheet?> link in the XML that's being output, of 
 
 C<arrayref> : the function will create a simple arrayref instead of a simple hashref (which will preserve order and elements with duplicate tags)
 
+C<utf8> : the strings which will be returned will have their utf8 flag set (defaults to 0 for compatibility with software built with older versions of this module). The way this module works is that it holds everything in byte format internally (even if you provide it with a utf8 XML string), and then produces utf8 strings or simple structures if (and only if) asked for with this flag. UTF is an important issue, please read C<perldoc utf8> for more.
+
 =head1 FUNCTIONS
 
 =cut
@@ -113,14 +115,10 @@ sub _decode {
 					'\'' => '&apos;',
 					'"' => '&quot;',
 	);
-	# Check for unknown entities
-	#{
-	#	my @things = $string =~ /\&[^\s\;]*\;/g;
-	#	confess "Error: Don't know how to decode entity '$_'"
-	#		foreach grep {! exists $replace{$_} and $_ !~ /\&\#[0-9]+\;/ and $_ !~ /\&\#x[0-9a-f]+\;/i} @things;
-	#}
+	Encode::_utf8_on($string);
 	$string =~ s/\&\#x([0-9a-f]+)\;/chr(hex($1))/egi;
 	$string =~ s/\&\#([0-9]+)\;/chr($1)/eg;
+	Encode::_utf8_off($string);
 	my $keys = "(".join("|", keys %replace).")";
 	$string =~ s/$keys/$replace{$1}/g;
 	return $string;
@@ -142,14 +140,14 @@ sub _strip_ns {
 
 Returns the XML string in a tidy format (with tabs & newlines)
 
-Optional flags: C<file>, C<complete>, C<indentstring>, C<soft>, C<save>
+Optional flags: C<file>, C<complete>, C<indentstring>, C<soft>, C<save>, C<utf8>
 
 =cut
 
 
 sub tidy_xml {
 	my $xml = shift;
-	if ($xml eq 'XML::MyXML') { $xml = shift; }
+	if ($xml eq 'XML::MyXML') { confess "Error: 'tidy_xml' is a function, not a method"; }
 	my $flags = shift || {};
 
 	my $object = &xml_to_object($xml, $flags);
@@ -307,7 +305,7 @@ sub _objectarray_to_xml {
 
 Creates an XML string from the 'XML::MyXML::Object' object provided
 
-Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<utf8>
 
 =cut
 
@@ -363,7 +361,7 @@ Produces a raw XML string from either an array reference, a hash reference or a 
     [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
     { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
 
-Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<xslt>
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<xslt>, C<utf8>
 
 =cut
 
@@ -373,11 +371,13 @@ sub simple_to_xml {
 
 	my $xml = '';
 	my ($key, $value, @residue) = (ref $arref eq 'HASH') ? %$arref : @$arref;
+	Encode::_utf8_off($key);
 	if (@residue) { confess "Error: the provided simple ref contains more than 1 top element"; }
 	my ($tag) = $key =~ /^(\S+)/g;
 	confess "Error: Strange key: $key" if ! defined $tag;
 
 	if (! ref $value) {
+		Encode::_utf8_off($value);
 		$xml .= "<$key>"._encode($value)."</$tag>";
 	} else {
 		$xml .= "<$key>"._arrayref_to_xml($value, $flags)."</$tag>";
@@ -386,9 +386,11 @@ sub simple_to_xml {
 	my $decl = $flags->{'complete'} ? '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
 	$decl .= "<?xml-stylesheet type=\"text/xsl\" href=\"$flags->{'xslt'}\"?>\n" if $flags->{'xslt'};
 	$xml = $decl . $xml;
+	if ($flags->{'utf8'}) { Encode::_utf8_on($xml); }
 
 	if (defined $flags->{'save'}) {
 		open FILE, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
+		if ($flags->{'utf8'}) { binmode FILE, ':utf8'; }
 		print FILE $xml;
 		close FILE;
 	}
@@ -408,6 +410,7 @@ sub _arrayref_to_xml {
 	foreach (my $i = 0; $i <= $#$arref; ) {
 	#while (@$arref) {
 		my $key = $arref->[$i++];
+		Encode::_utf8_off($key);
 		#my $key = shift @$arref;
 		my ($tag) = $key =~ /^(\S+)/g;
 		confess "Error: Strange key: $key" if ! defined $tag;
@@ -415,8 +418,10 @@ sub _arrayref_to_xml {
 		#my $value = shift @$arref;
 
 		if ($key eq '!as_is') {
+			Encode::_utf8_off($value);
 			$xml .= $value if &check_xml($value);
 		} elsif (! ref $value) {
+			Encode::_utf8_off($value);
 			$xml .= "<$key>"._encode($value)."</$tag>";
 		} else {
 			$xml .= "<$key>"._arrayref_to_xml($value, $flags)."</$tag>";
@@ -433,12 +438,15 @@ sub _hashref_to_xml {
 	my $xml = '';
 
 	while (my ($key, $value) = each %$hashref) {
+		Encode::_utf8_off($key);
 		my ($tag) = $key =~ /^(\S+)/g;
 		confess "Error: Strange key: $key" if ! defined $tag;
 
 		if ($key eq '!as_is') {
+			Encode::_utf8_off($value);
 			$xml .= $value if &check_xml($value);
 		} elsif (! ref $value) {
+			Encode::_utf8_off($value);
 			$xml .= "<$key>"._encode($value)."</$tag>";
 		} else {
 			$xml .= "<$key>"._arrayref_to_xml($value, $flags)."</$tag>";
@@ -453,7 +461,7 @@ Produces a very simple hash object from the raw XML string provided. An example 
 
 Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
 
-Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>, C<arrayref>
+Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>, C<arrayref>, C<utf8>
 
 =cut
 
@@ -470,7 +478,7 @@ sub xml_to_simple {
 
 sub _objectarray_to_simple {
 	my $object = shift;
-	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
+	my $flags = shift || {};
 
 	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
 
@@ -497,10 +505,12 @@ sub _objectarray_to_simple_hashref {
 		if (defined $stuff->{'element'}) {
 			my $key = $stuff->{'element'};
 			if ($flags->{'strip_ns'}) { $key = &XML::MyXML::_strip_ns($key); }
+			Encode::_utf8_on($key) if $flags->{'utf8'};
 			$hashref->{ $key } = &_objectarray_to_simple($stuff->{'content'}, $flags);
 		} elsif (defined $stuff->{'value'}) {
 			my $value = $stuff->{'value'};
 			if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
+			Encode::_utf8_on($value) if $flags->{'utf8'};
 			return $value if $value =~ /\S/;
 		}
 	}
@@ -526,11 +536,13 @@ sub _objectarray_to_simple_arrayref {
 		if (defined $stuff->{'element'}) {
 			my $key = $stuff->{'element'};
 			if ($flags->{'strip_ns'}) { $key = &XML::MyXML::_strip_ns($key); }
+			Encode::_utf8_on($key) if $flags->{'utf8'};
 			push @$arrayref, ( $key, &_objectarray_to_simple($stuff->{'content'}, $flags) );
 			#$hashref->{ $key } = &_objectarray_to_simple($stuff->{'content'}, $flags);
 		} elsif (defined $stuff->{'value'}) {
 			my $value = $stuff->{'value'};
 			if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
+			Encode::_utf8_on($value) if $flags->{'utf8'};
 			return $value if $value =~ /\S/;
 		}
 	}
@@ -584,11 +596,13 @@ sub children {
 	my $self = shift;
 	my $tag = shift;
 
-	my $tagmeta = defined $tag ? quotemeta($tag) : '';
+	$tag = '' if ! defined $tag;
 
-	if (defined $tag) {
-		return grep {defined $_->{'element'} and ($_->{'element'} eq $tag or $_->{'element'} =~ /\:$tagmeta$/)} @{$self->{'content'}};
+	if (length $tag) {
+	print "Hi1";
+		return grep {defined $_->{'element'} and $_->{'element'} =~ /(^|\:)\Q$tag\E$/} @{$self->{'content'}};
 	} else {
+	print "Hi2";
 		return grep { defined $_->{'element'} } @{$self->{'content'}};
 	}
 }
@@ -617,7 +631,7 @@ sub path {
 
 When the element represented by the $obj object has only text contents, returns those contents as a string. If the $obj element has no contents, value will return an empty string.
 
-Optional flags: C<strip>
+Optional flags: C<strip>, C<utf8>
 
 =cut
 
@@ -628,6 +642,7 @@ sub value {
 	if ($self->{'content'} and $self->{'content'}[0]) {
 		my $value = $self->{'content'}[0]{'value'};
 		if ($flags->{'strip'}) { $value = &XML::MyXML::_strip($value); }
+		Encode::_utf8_on($value) if $flags->{'utf8'};
 		return $value;
 	} else {
 		return undef;
@@ -638,13 +653,18 @@ sub value {
 
 Returns the value of the 'attrname' attribute of top element. Returns undef if attribute does not exist.
 
+Optional flags: C<utf8>
+
 =cut
 
 sub attr {
 	my $self = shift;
 	my $attrname = shift;
+	my $flags = shift || {};
 
-	return $self->{'attrs'}->{$attrname};
+	my $attrvalue = $self->{'attrs'}->{$attrname};
+	Encode::_utf8_on($attrvalue) if $flags->{'utf8'};
+	return $attrvalue;
 }
 
 =head2 $obj->tag
@@ -652,14 +672,18 @@ sub attr {
 Returns the tag of the $obj element (after stripping it from namespaces). E.g. if $obj represents an <rss:item> element, C<< $obj->tag >> will just return the name 'item'.
 Returns undef if $obj doesn't represent a tag.
 
+Optional flags: C<utf8>
+
 =cut
 
 sub tag {
 	my $self = shift;
+	my $flags = shift || {};
 
 	my $tag = $self->{'element'};
 	if (defined $tag) {
 		$tag =~ s/^.*\://;
+		Encode::_utf8_on($tag) if $flags->{'utf8'};
 		return $tag;
 	} else {
 		return undef;
@@ -670,7 +694,7 @@ sub tag {
 
 Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply.
 
-Optional flags: C<internal>, C<strip>, C<strip_ns>, C<arrayref>
+Optional flags: C<internal>, C<strip>, C<strip_ns>, C<arrayref>, C<utf8>
 
 =cut
 
@@ -696,7 +720,7 @@ sub simplify {
 
 Returns the XML string of the object, just like calling C<&object_to_xml( $obj )>
 
-Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<utf8>
 
 =cut
 
@@ -708,8 +732,10 @@ sub to_xml {
 	my $xml = &XML::MyXML::_objectarray_to_xml([$self]);
 	if ($flags->{'tidy'}) { $xml = &XML::MyXML::tidy_xml($xml, { %$flags, complete => 0, save => undef }); }
 	$xml = $decl . $xml;
+	if ($flags->{'utf8'}) { Encode::_utf8_on($xml); }
 	if (defined $flags->{'save'}) {
 		open FILE, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
+		if ($flags->{'utf8'}) { binmode FILE, ':utf8'; }
 		print FILE $xml;
 		close FILE;
 	}
@@ -720,7 +746,7 @@ sub to_xml {
 
 Returns the XML string of the object in tidy form, just like calling C<&tidy_xml( &object_to_xml( $obj ) )>
 
-Optional flags: C<complete>, C<indentstring>, C<save>
+Optional flags: C<complete>, C<indentstring>, C<save>, C<utf8>
 
 =cut
 

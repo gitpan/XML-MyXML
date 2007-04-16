@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0976  Apr 16th, 2007
+        Fixed encoding issues completely. All strings output by this module are in bytes, unless the 'utf8' flag is used (see this module's documentation)
+
 0.0975  Apr 16th, 2007
         Fixed encoding issue
 
