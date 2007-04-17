@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.09766 Apr 17th, 2007
+        All functions that parse XML strings will convert string to utf8 if a different encoding is declared in the XML declaration
+
 0.09765 Apr 17th, 2007
         Fixed dependencies so tests don't fail
 

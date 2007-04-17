@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.09765
+Version 0.09766
 
 =cut
 
-our $VERSION = '0.09765';
+our $VERSION = '0.09766';
 
 =head1 SYNOPSIS
 
@@ -179,6 +179,10 @@ sub xml_to_object {
 		close FILE;
 	}
 
+	my (undef, undef, $encoding) = $xml =~ /<\?xml(\s[^>]+)?\sencoding=(['"])(.*?)\2/g;
+	if ($encoding and $encoding !~ /utf/i) {
+		$xml = decode($encoding, $xml);
+	}
 	Encode::_utf8_on($xml);
 	if (! utf8::valid($xml)) { confess "Error: Input string is invalid UTF-8" unless $soft; return undef; }
 	Encode::_utf8_off($xml);
@@ -471,9 +475,7 @@ Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>, C<arrayref
 
 sub xml_to_simple {
 	my $xml = shift;
-	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
-
-	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
+	my $flags = shift || {};
 
 	my $object = &xml_to_object($xml, $flags);
 
@@ -483,8 +485,6 @@ sub xml_to_simple {
 sub _objectarray_to_simple {
 	my $object = shift;
 	my $flags = shift || {};
-
-	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
 
 	if (! defined $object) { return undef; }
 
@@ -497,9 +497,7 @@ sub _objectarray_to_simple {
 
 sub _objectarray_to_simple_hashref {
 	my $object = shift;
-	my $flags = (@_ and defined $_[0]) ? $_[0] : {};
-
-	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
+	my $flags = shift || {};
 
 	if (! defined $object) { return undef; }
 
