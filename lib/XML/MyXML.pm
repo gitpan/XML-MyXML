@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.09764
+Version 0.09765
 
 =cut
 
-our $VERSION = '0.09764';
+our $VERSION = '0.09765';
 
 =head1 SYNOPSIS
 
