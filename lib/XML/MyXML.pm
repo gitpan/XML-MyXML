@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.09766
+Version 0.098
 
 =cut
 
-our $VERSION = '0.09766';
+our $VERSION = '0.098';
 
 =head1 SYNOPSIS
 
@@ -651,7 +651,7 @@ sub value {
 
 =head2 $obj->attr('attrname')
 
-Returns the value of the 'attrname' attribute of top element. Returns undef if attribute does not exist.
+Returns the value of the 'attrname' attribute of the top element. Returns undef if attribute does not exist.
 
 Optional flags: C<utf8>
 
@@ -758,6 +758,35 @@ sub to_tidy_xml {
 	return $self->to_xml( $flags );
 }
 
+=head2 $obj->delete
+
+Deletes the object and all its children from memory. This is the only way to remove an XML object from memory and clear the RAM, since children and parents refer to each other circularly.
+
+The way it works is by removing references from the object's descendants to their parents.
+
+=cut
+
+sub delete {
+	my $self = shift;
+
+	# Remove self from parent's "content" field
+	my $parent = $self->{'parent'};
+	if ($parent) { 
+		my @content = @{ $parent->{'content'} };
+		my @new = ();
+		foreach my $item (@content) {
+			if ($item != $self) { push @new, $item; }
+		}
+		$parent->{'content'} = \@new;
+	}
+
+	my $content = $self->{'content'};
+	if ($content) {
+		foreach my $item (@$content) {
+			$item->delete();
+		}
+	}
+}
 
 =head1 AUTHOR
 

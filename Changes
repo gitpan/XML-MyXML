@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.098   Jul 26th, 2007
+        Added the $obj->delete method that will clear the memory of an object (needed because an object and its children refer to each other circularly)
+
 0.09766 Apr 17th, 2007
         All functions that parse XML strings will convert string to utf8 if a different encoding is declared in the XML declaration
 
