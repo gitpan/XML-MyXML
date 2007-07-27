@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.09805 Jul 27th, 2007
+        Slight improvements to the $obj->delete method and to garbage-colection throughout the module
+
 0.098   Jul 26th, 2007
         Added the $obj->delete method that will clear the memory of an object (needed because an object and its children refer to each other circularly)
 

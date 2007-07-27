@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.098
+Version 0.09805
 
 =cut
 
-our $VERSION = '0.098';
+our $VERSION = '0.09805';
 
 =head1 SYNOPSIS
 
@@ -155,7 +155,9 @@ sub tidy_xml {
 	my $object = &xml_to_object($xml, $flags);
 	defined $object or return $object;
 	&_tidy_object($object, undef, $flags);
-	return $object->to_xml({ %$flags, tidy => 0 }) . "\n";
+	my $return = $object->to_xml({ %$flags, tidy => 0 }) . "\n";
+	$object->delete();
+	return $return;
 }
 
 
@@ -219,15 +221,15 @@ sub xml_to_object {
 		if (! @els) { confess "Error: No elements in XML document" unless $soft; return undef; }
 	}
 	my @stack;
-	my $object = { content => [] };
+	my $object = bless ({ content => [] }, 'XML::MyXML::Object');
 	my $pointer = $object;
 	foreach my $el (@els) {
 		if ($el =~ /^<\/?>$/) {
-			confess "Error: Strange element: '$el'" unless $soft; return undef;
+			confess "Error: Strange element: '$el'" unless $soft; $object->delete(); return undef;
 		} elsif ($el =~ /^<\/[^\s>]+>$/) {
 			my ($element) = $el =~ /^<\/(\S+)>$/g;
-			if (! length($element)) { confess "Error: Strange element: '$el'" unless $soft; return undef; }
-			if ($stack[$#stack]->{'element'} ne $element) { confess "Error: Incompatible stack element: stack='".$stack[$#stack]->{'element'}."' element='$el'" unless $soft; return undef; }
+			if (! length($element)) { confess "Error: Strange element: '$el'" unless $soft; $object->delete(); return undef; }
+			if ($stack[$#stack]->{'element'} ne $element) { confess "Error: Incompatible stack element: stack='".$stack[$#stack]->{'element'}."' element='$el'" unless $soft; $object->delete(); return undef; }
 			my $stackentry = pop @stack;
 			if ($#{$stackentry->{'content'}} == -1) {
 				delete $stackentry->{'content'};
@@ -235,7 +237,7 @@ sub xml_to_object {
 			$pointer = $stackentry->{'parent'};
 		} elsif ($el =~ /^<[^>]+\/>$/) {
 			my ($element) = $el =~ /^<([^\s>\/]+)/g;
-			if (! length($element)) { confess "Error: Strange element: '$el'" unless $soft; return undef; }
+			if (! length($element)) { confess "Error: Strange element: '$el'" unless $soft; $object->delete(); return undef; }
 			my $elementmeta = quotemeta($element);
 			$el =~ s/^<$elementmeta//;
 			$el =~ s/\/>$//;
@@ -245,7 +247,7 @@ sub xml_to_object {
 			my %attr;
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
-				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $soft; return undef; }
+				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $soft; $object->delete(); return undef; }
 				$attr{$name} = &_decode($value, $entities);
 			}
 			my $entry = { element => $element, attrs => \%attr, parent => $pointer };
@@ -253,7 +255,7 @@ sub xml_to_object {
 			push @{$pointer->{'content'}}, $entry;
 		} elsif ($el =~ /^<[^\s>\/][^>]*>$/) {
 			my ($element) = $el =~ /^<([^\s>]+)/g;
-			if (! length($element)) { confess "Error: Strange element: '$el'" unless $soft; return undef; }
+			if (! length($element)) { confess "Error: Strange element: '$el'" unless $soft; $object->delete(); return undef; }
 			my $elementmeta = quotemeta($element);
 			$el =~ s/^<$elementmeta//;
 			$el =~ s/>$//;
@@ -263,7 +265,7 @@ sub xml_to_object {
 			my %attr;
 			foreach my $attr (@attrs) {
 				my ($name, undef, $value) = $attr =~ /^(\S+?)=(['"])(.*?)\2$/g;
-				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $soft; return undef; }
+				if (! length($name) or ! defined($value)) { confess "Error: Strange attribute: '$attr'" unless $soft; $object->delete(); return undef; }
 				$attr{$name} = &_decode($value, $entities);
 			}
 			my $entry = { element => $element, attrs => \%attr, content => [], parent => $pointer };
@@ -276,10 +278,10 @@ sub xml_to_object {
 			bless $entry, 'XML::MyXML::Object';
 			push @{$pointer->{'content'}}, $entry;
 		} else {
-			confess "Error: Strange element: '$el'" unless $soft; return undef;
+			confess "Error: Strange element: '$el'" unless $soft; $object->delete(); return undef;
 		}
 	}
-	if (@stack) { confess "Error: The <$stack[-1]->{'element'}> element has not been closed in XML" unless $soft; return undef; }
+	if (@stack) { confess "Error: The <$stack[-1]->{'element'}> element has not been closed in XML" unless $soft; $object->delete(); return undef; }
 	$object = $object->{'content'}[0];
 	$object->{'parent'} = undef;
 	return $object;
@@ -350,10 +352,10 @@ sub _tidy_object {
 	@children = @{$object->{'content'}};
 	$object->{'content'} = [];
 	for my $i (0..$#children) {
-		push @{$object->{'content'}}, { value => "\n".($flags->{'indentstring'}x($tabs+1)), parent => $object };
+		push @{$object->{'content'}}, bless ({ value => "\n".($flags->{'indentstring'}x($tabs+1)), parent => $object }, 'XML::MyXML::Object');
 		push @{$object->{'content'}}, $children[$i];
 	}
-	push @{$object->{'content'}}, { value => "\n".($flags->{'indentstring'}x($tabs)), parent => $object };
+	push @{$object->{'content'}}, bless ({ value => "\n".($flags->{'indentstring'}x($tabs)), parent => $object }, 'XML::MyXML::Object');
 	
 	for my $i (0..$#{$object->{'content'}}) {
 		&_tidy_object($object->{'content'}[$i], $tabs+1, $flags);
@@ -479,7 +481,11 @@ sub xml_to_simple {
 
 	my $object = &xml_to_object($xml, $flags);
 
-	return defined $object ? $object->simplify($flags) : $object;
+	my $return = defined $object ? $object->simplify($flags) : $object;
+
+	$object->delete();
+
+	return $return;
 }
 
 sub _objectarray_to_simple {
@@ -571,8 +577,13 @@ sub check_xml {
 
 	if (ref $flags ne 'HASH') { confess "Error: This method of setting flags is deprecated in XML::MyXML v0.083 - check module's documentation for the new way"; }
 
-	return 1 if &xml_to_object($xml, { %$flags, soft => 1 }); # soft = 'don't die if can't parse, just return undef'
-	return 0;
+	my $obj = &xml_to_object($xml, { %$flags, soft => 1 });
+	if ($obj) {
+		$obj->delete();
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 
@@ -772,12 +783,14 @@ sub delete {
 	# Remove self from parent's "content" field
 	my $parent = $self->{'parent'};
 	if ($parent) { 
-		my @content = @{ $parent->{'content'} };
-		my @new = ();
-		foreach my $item (@content) {
-			if ($item != $self) { push @new, $item; }
+		my $content = $parent->{'content'};
+		if ($content) {
+			my @new = ();
+			foreach my $item (@$content) {
+				if ($item != $self) { push @new, $item; }
+			}
+			$parent->{'content'} = \@new;
 		}
-		$parent->{'content'} = \@new;
 	}
 
 	my $content = $self->{'content'};
@@ -786,6 +799,8 @@ sub delete {
 			$item->delete();
 		}
 	}
+
+	delete $self->{$_} foreach keys %$self;
 }
 
 =head1 AUTHOR
