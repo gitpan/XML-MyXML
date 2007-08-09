@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.09806
+Version 0.098061
 
 =cut
 
-our $VERSION = '0.09806';
+our $VERSION = '0.098061';
 
 =head1 SYNOPSIS
 
@@ -50,7 +50,7 @@ This module can parse XML comments, CDATA sections, XML entities (the standard f
 
 It will ignore (won't parse) C<< <!DOCTYPE...> >>, C<< <?...?> >> and other C<< <!...> >> special markup
 
-Parsed documents must be UTF-8 encoded, as will all XML documents produced by this module be
+Parsed documents must be UTF-8 encoded unless an encoding is declared in the initial XML declaration <?xml ... ?> of the document. All XML documents produced by this module will be UTF-8 encoded, as will all strings output by its functions be.
 
 XML documents to be parsed may not contain the C<< > >> character unencoded in attribute values
 
