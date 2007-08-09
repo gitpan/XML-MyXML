@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.09806 Aug 10th, 2007
+        XML documents to be parsed may be encoded either in UTF-8 or in some other encoding provided this encoding is declared in the XML declaration ( <?xml ... encoding="..." ?> ) in the beginning of the document
+
 0.09805 Jul 27th, 2007
         Slight improvements to the $obj->delete method and to garbage-colection throughout the module
 
