@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0985  Sep 5th, 2007
+        If $obj->attr is called without parameters, will return a hash of all attribute => value pairs
+
 0.098061 Aug 10th, 2007
         Minor modification in the documentation to describe change in version 0.09806
 

@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.098061
+Version 0.0985
 
 =cut
 
-our $VERSION = '0.098061';
+our $VERSION = '0.0985';
 
 =head1 SYNOPSIS
 
@@ -50,7 +50,7 @@ This module can parse XML comments, CDATA sections, XML entities (the standard f
 
 It will ignore (won't parse) C<< <!DOCTYPE...> >>, C<< <?...?> >> and other C<< <!...> >> special markup
 
-Parsed documents must be UTF-8 encoded unless an encoding is declared in the initial XML declaration <?xml ... ?> of the document. All XML documents produced by this module will be UTF-8 encoded, as will all strings output by its functions be.
+Parsed documents must be UTF-8 encoded unless an encoding is declared in the initial XML declaration <?xml ... ?> of the document. All XML documents produced by this module will be UTF-8 encoded, as will be all strings output by its functions.
 
 XML documents to be parsed may not contain the C<< > >> character unencoded in attribute values
 
@@ -666,7 +666,7 @@ sub value {
 
 =head2 $obj->attr('attrname')
 
-Returns the value of the 'attrname' attribute of the top element. Returns undef if attribute does not exist.
+Returns the value of the 'attrname' attribute of the top element. Returns undef if attribute does not exist. If no 'attrname' is provided, it will return a hash of all of the top element's attributes and values. If called without a paramter, returns a hash with all attribute => value pairs.
 
 Optional flags: C<utf8>
 
@@ -677,9 +677,19 @@ sub attr {
 	my $attrname = shift;
 	my $flags = shift || {};
 
-	my $attrvalue = $self->{'attrs'}->{$attrname};
-	Encode::_utf8_on($attrvalue) if $flags->{'utf8'};
-	return $attrvalue;
+	if (defined $attrname) {
+		my $attrvalue = $self->{'attrs'}->{$attrname};
+		Encode::_utf8_on($attrvalue) if $flags->{'utf8'};
+		return $attrvalue;
+	} else {
+		my %attr = %{$self->{'attrs'}};
+		if ($flags->{'utf8'}) {
+			foreach my $key (keys %attr) {
+				Encode::_utf8_on($attr{$key});
+			}
+		}
+		return %attr;
+	}
 }
 
 =head2 $obj->tag
