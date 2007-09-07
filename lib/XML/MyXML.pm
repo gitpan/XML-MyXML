@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.0985
+Version 0.09851
 
 =cut
 
-our $VERSION = '0.0985';
+our $VERSION = '0.09851';
 
 =head1 SYNOPSIS
 
@@ -666,7 +666,7 @@ sub value {
 
 =head2 $obj->attr('attrname')
 
-Returns the value of the 'attrname' attribute of the top element. Returns undef if attribute does not exist. If no 'attrname' is provided, it will return a hash of all of the top element's attributes and values. If called without a paramter, returns a hash with all attribute => value pairs.
+Returns the value of the 'attrname' attribute of the top element. Returns undef if attribute does not exist. If called without the 'attrname' paramter, returns a hash with all attribute => value pairs.
 
 Optional flags: C<utf8>
 
