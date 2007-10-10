@@ -16,11 +16,11 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-Version 0.09851
+Version 0.0986
 
 =cut
 
-our $VERSION = '0.09851';
+our $VERSION = '0.0986';
 
 =head1 SYNOPSIS
 
@@ -622,6 +622,12 @@ sub children {
 	}
 }
 
+sub parent {
+	my $self = shift;
+
+	return $self->{'parent'};
+}
+
 =head2 $obj->path("subtag1/subsubtag2/.../subsubsubtagX")
 
 Returns the element specified by the path as an XML::MyXML::Object object. When there are more than one tags with the specified name in the last step of the path, it will return all of them as an array. In scalar context will only return the first one.
@@ -782,6 +788,9 @@ sub to_tidy_xml {
 	$flags->{'tidy'} = 1;
 	return $self->to_xml( $flags );
 }
+
+
+
 
 =head2 $obj->delete
 

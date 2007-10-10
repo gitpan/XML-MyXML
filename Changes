@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0986  Oct 8th, 2007
+        Added the ->parent() method
+
 0.09851 Sep 7th, 2007
         Deleted a duplicate sentence from the documentation
 
