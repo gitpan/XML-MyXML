@@ -1,41 +1,13 @@
-XML-MyXML
-
-INSTALLATION
-
-To install this module, run the following commands:
-
-    perl Makefile.PL
-    make
-    make test
-    make install
 
 
-SUPPORT AND DOCUMENTATION
+This archive contains the distribution XML-MyXML,
+version 0.0987:
 
-After installing, you can find documentation for this module with the perldoc command.
+  A simple-to-use XML module, for parsing and creating XML documents
 
-    perldoc XML::MyXML
+This software is copyright (c) 2013 by Alexander Karelas.
 
-You can also look for information at:
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
-    Search CPAN
-        http://search.cpan.org/dist/XML-MyXML
 
-    CPAN Request Tracker:
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=XML-MyXML
-
-    AnnoCPAN, annotated CPAN documentation:
-        http://annocpan.org/dist/XML-MyXML
-
-    CPAN Ratings:
-        http://cpanratings.perl.org/d/XML-MyXML
-
-    Module's RSS feed:
-        http://myperl.eu/permodule/XML-MyXML
-
-COPYRIGHT AND LICENCE
-
-Copyright (C) 2006-2007 Alexander Karelas
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.

@@ -1,12 +1,19 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         XML-MyXML
-version:      0.0986
-version_from: lib/XML/MyXML.pm
-installdirs:  site
-requires:
-    Encode:                        0
-    Test::More:                    0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30_01
+---
+abstract: 'A simple-to-use XML module, for parsing and creating XML documents'
+author:
+  - 'Alexander Karelas <karjala@cpan.org>'
+build_requires: {}
+configure_requires:
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.300030, CPAN::Meta::Converter version 2.120921'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: XML-MyXML
+resources:
+  bugtracker: https://github.com/akarelas/xml-myxml/issues
+  homepage: https://github.com/akarelas/xml-myxml
+  repository: https://github.com/akarelas/xml-myxml.git
+version: 0.0987

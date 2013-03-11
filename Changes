@@ -1,5 +1,8 @@
 Revision history for XML-MyXML
 
+0.0987  2013-03-11
+        Switched to Dist::Zilla
+
 0.0986  Oct 8th, 2007
         Added the ->parent() method
 

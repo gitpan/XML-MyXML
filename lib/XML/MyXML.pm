@@ -1,98 +1,27 @@
 package XML::MyXML;
+{
+  $XML::MyXML::VERSION = '0.0987';
+}
+# ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
 
 use strict;
 use warnings;
 use utf8;
 use Carp;
-use Data::Dumper;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple check_xml);
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 use Encode;
-=head1 NAME
 
-XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
-
-=head1 VERSION
-
-Version 0.0986
-
-=cut
-
-our $VERSION = '0.0986';
-
-=head1 SYNOPSIS
-
-    use XML::MyXML qw(tidy_xml xml_to_object);
-    use XML::MyXML qw(:all);
-
-    my $xml = "<item><name>Table</name><price><usd>10.00</usd><eur>8.50</eur></price></item>";
-    print tidy_xml($xml);
-
-    my $obj = xml_to_object($xml);
-    print "Price in Euros = " . $obj->path('price/eur')->value;
-
-    $obj->simplify is hashref { item => { name => 'Table', price => { usd => '10.00', eur => '8.50' } } }
-    $obj->simplify({ internal => 1 }) is hashref { name => 'Table', price => { usd => '10.00', eur => '8.50' } }
-
-=head1 EXPORT
-
-tidy_xml, xml_to_object, object_to_xml, simple_to_xml, xml_to_simple, check_xml
-
-=head1 DESCRIPTION
-
-A simple-to-use XML module, for parsing and creating XML documents
-
-=head1 FEATURES & LIMITATIONS
-
-This module can parse XML comments, CDATA sections, XML entities (the standard five and numeric ones) and simple non-recursive C<< <!ENTITY> >>s
-
-It will ignore (won't parse) C<< <!DOCTYPE...> >>, C<< <?...?> >> and other C<< <!...> >> special markup
-
-Parsed documents must be UTF-8 encoded unless an encoding is declared in the initial XML declaration <?xml ... ?> of the document. All XML documents produced by this module will be UTF-8 encoded, as will be all strings output by its functions.
-
-XML documents to be parsed may not contain the C<< > >> character unencoded in attribute values
-
-=head1 OPTIONAL FUNCTION FLAGS
-
-Some functions and methods in this module accept optional flags, listed under each function in the documentation. They are optional, default to zero unless stated otherwise, and can be used as follows: S<C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>>. This is what each flag does:
-
-C<strip> : the function will strip initial and ending whitespace from all text values returned
-
-C<file> : the function will expect the path to a file containing an XML document to parse, instead of an XML string
-
-C<complete> : the function's XML output will include an XML declaration (C<< <?xml ... ?>  >>) in the beginning
-
-C<soft> : the function will return undef instead of dying in case of an error during XML parsing
-
-C<internal> : the function will only return the contents of an element in a hashref instead of the element itself (see L</SYNOPSIS> for example)
-
-C<tidy> : the function will return tidy XML
-
-C<indentstring> : when producing tidy XML, this denotes the string with which child elements will be indented (Default is the 'tab' character)
-
-C<save> : the function (apart from doing what it's supposed to do) will also save its XML output in a file whose path is denoted by this flag
-
-C<strip_ns> : strip the namespaces (characters up to and including ':') from the tags
-
-C<xslt> : will add a <?xml-stylesheet?> link in the XML that's being output, of type 'text/xsl', pointing to the filename or URL denoted by this flag
-
-C<arrayref> : the function will create a simple arrayref instead of a simple hashref (which will preserve order and elements with duplicate tags)
-
-C<utf8> : the strings which will be returned will have their utf8 flag set (defaults to 0 for compatibility with software built with older versions of this module). The way this module works is that it holds everything in byte format internally (even if you provide it with a utf8 XML string), and then produces utf8 strings or simple structures if (and only if) asked for with this flag. UTF is an important issue, please read C<perldoc utf8> for more.
-
-=head1 FUNCTIONS
-
-=cut
 
 sub _encode {
 	my $string = shift;
 	my $entities = shift || {};
 	defined $string or $string = '';
 	my %replace = 	(
-					'<' => '&lt;', 
-					'>' => '&gt;', 
+					'<' => '&lt;',
+					'>' => '&gt;',
 					'&' => '&amp;',
 					'\'' => '&apos;',
 					'"' => '&quot;',
@@ -109,8 +38,8 @@ sub _decode {
 	defined $string or $string = '';
 	my %replace = reverse (
 					(reverse (%$entities)),
-					'<' => '&lt;', 
-					'>' => '&gt;', 
+					'<' => '&lt;',
+					'>' => '&gt;',
 					'&' => '&amp;',
 					'\'' => '&apos;',
 					'"' => '&quot;',
@@ -138,13 +67,6 @@ sub _strip_ns {
 	return defined $string ? ($string =~ /^(?:.+\:)?(.*)$/s)[0] : $string;
 }
 
-=head2 tidy_xml($raw_xml)
-
-Returns the XML string in a tidy format (with tabs & newlines)
-
-Optional flags: C<file>, C<complete>, C<indentstring>, C<soft>, C<save>, C<utf8>
-
-=cut
 
 
 sub tidy_xml {
@@ -161,13 +83,6 @@ sub tidy_xml {
 }
 
 
-=head2 xml_to_object($raw_xml)
-
-Creates an 'XML::MyXML::Object' object from the raw XML provided
-
-Optional flags: C<file>, C<soft>
-
-=cut
 
 sub xml_to_object {
 	my $xml = shift;
@@ -315,13 +230,6 @@ sub _objectarray_to_xml {
 	return $xml;
 }
 
-=head2 object_to_xml($object)
-
-Creates an XML string from the 'XML::MyXML::Object' object provided
-
-Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<utf8>
-
-=cut
 
 sub object_to_xml {
 	my $object = shift;
@@ -350,9 +258,9 @@ sub _tidy_object {
 		}
 	}
 	if ($hastext) { return; }
-	
+
 	@{$object->{'content'}} = grep { ! defined $_->{'value'} or $_->{'value'} !~ /^\s*$/ } @{$object->{'content'}};
-	
+
 	@children = @{$object->{'content'}};
 	$object->{'content'} = [];
 	for my $i (0..$#children) {
@@ -360,24 +268,13 @@ sub _tidy_object {
 		push @{$object->{'content'}}, $children[$i];
 	}
 	push @{$object->{'content'}}, bless ({ value => "\n".($flags->{'indentstring'}x($tabs)), parent => $object }, 'XML::MyXML::Object');
-	
+
 	for my $i (0..$#{$object->{'content'}}) {
 		&_tidy_object($object->{'content'}[$i], $tabs+1, $flags);
 	}
 }
 
 
-=head2 simple_to_xml($simple_array_ref)
-
-Produces a raw XML string from either an array reference, a hash reference or a mixed structure such as these examples:
-
-    { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } }
-    [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
-    { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
-
-Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<xslt>, C<utf8>
-
-=cut
 
 sub simple_to_xml {
 	my $arref = shift;
@@ -469,15 +366,6 @@ sub _hashref_to_xml {
 	return $xml;
 }
 
-=head2 xml_to_simple($raw_xml)
-
-Produces a very simple hash object from the raw XML string provided. An example hash object created thusly is this: S<C<< { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } } >>>
-
-Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
-
-Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>, C<arrayref>, C<utf8>
-
-=cut
 
 sub xml_to_simple {
 	my $xml = shift;
@@ -567,13 +455,6 @@ sub _objectarray_to_simple_arrayref {
 }
 
 
-=head2 check_xml($raw_xml)
-
-Returns 1 if the $raw_xml string is valid XML (valid enough to be used by this module), and 0 otherwise.
-
-Optional flags: C<file>
-
-=cut
 
 sub check_xml {
 	my $xml = shift;
@@ -593,12 +474,12 @@ sub check_xml {
 
 
 package XML::MyXML::Object;
+{
+  $XML::MyXML::Object::VERSION = '0.0987';
+}
 
 use Carp;
 
-=head1 OBJECT METHODS
-
-=cut
 
 sub new {
 	my $class = shift;
@@ -628,11 +509,6 @@ sub parent {
 	return $self->{'parent'};
 }
 
-=head2 $obj->path("subtag1/subsubtag2/.../subsubsubtagX")
-
-Returns the element specified by the path as an XML::MyXML::Object object. When there are more than one tags with the specified name in the last step of the path, it will return all of them as an array. In scalar context will only return the first one.
-
-=cut
 
 sub path {
 	my $self = shift;
@@ -648,13 +524,6 @@ sub path {
 	return wantarray ? $el->children($path[$#path]) : ($el->children($path[$#path]))[0];
 }
 
-=head2 $obj->value
-
-When the element represented by the $obj object has only text contents, returns those contents as a string. If the $obj element has no contents, value will return an empty string.
-
-Optional flags: C<strip>, C<utf8>
-
-=cut
 
 sub value {
 	my $self = shift;
@@ -670,13 +539,6 @@ sub value {
 	}
 }
 
-=head2 $obj->attr('attrname')
-
-Returns the value of the 'attrname' attribute of the top element. Returns undef if attribute does not exist. If called without the 'attrname' paramter, returns a hash with all attribute => value pairs.
-
-Optional flags: C<utf8>
-
-=cut
 
 sub attr {
 	my $self = shift;
@@ -698,14 +560,6 @@ sub attr {
 	}
 }
 
-=head2 $obj->tag
-
-Returns the tag of the $obj element (after stripping it from namespaces). E.g. if $obj represents an <rss:item> element, C<< $obj->tag >> will just return the name 'item'.
-Returns undef if $obj doesn't represent a tag.
-
-Optional flags: C<utf8>
-
-=cut
 
 sub tag {
 	my $self = shift;
@@ -721,13 +575,6 @@ sub tag {
 	}
 }
 
-=head2 $obj->simplify
-
-Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply.
-
-Optional flags: C<internal>, C<strip>, C<strip_ns>, C<arrayref>, C<utf8>
-
-=cut
 
 sub simplify {
 	my $self = shift;
@@ -747,18 +594,11 @@ sub simplify {
 	}
 }
 
-=head2 $obj->to_xml
-
-Returns the XML string of the object, just like calling C<&object_to_xml( $obj )>
-
-Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<utf8>
-
-=cut
 
 sub to_xml {
 	my $self = shift;
 	my $flags = shift || {};
-	
+
 	my $decl = $flags->{'complete'} ? '<?xml version="1.1" encoding="UTF-8" standalone="yes" ?>'."\n" : '';
 	my $xml = &XML::MyXML::_objectarray_to_xml([$self]);
 	if ($flags->{'tidy'}) { $xml = &XML::MyXML::tidy_xml($xml, { %$flags, complete => 0, save => undef }); }
@@ -773,13 +613,6 @@ sub to_xml {
 	return $xml;
 }
 
-=head2 $obj->to_tidy_xml
-
-Returns the XML string of the object in tidy form, just like calling C<&tidy_xml( &object_to_xml( $obj ) )>
-
-Optional flags: C<complete>, C<indentstring>, C<save>, C<utf8>
-
-=cut
 
 sub to_tidy_xml {
 	my $self = shift;
@@ -792,20 +625,13 @@ sub to_tidy_xml {
 
 
 
-=head2 $obj->delete
-
-Deletes the object and all its children from memory. This is the only way to remove an XML object from memory and clear the RAM, since children and parents refer to each other circularly.
-
-The way it works is by removing references from the object's descendants to their parents.
-
-=cut
 
 sub delete {
 	my $self = shift;
 
 	# Remove self from parent's "content" field
 	my $parent = $self->{'parent'};
-	if ($parent) { 
+	if ($parent) {
 		my $content = $parent->{'content'};
 		if ($content) {
 			my @new = ();
@@ -826,59 +652,189 @@ sub delete {
 	delete $self->{$_} foreach keys %$self;
 }
 
-=head1 AUTHOR
 
-Alexander Karelas, C<< <karjala at karjala.org> >>
+1; # End of XML::MyXML
+
+__END__
+
+=pod
+
+=head1 NAME
+
+XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
+
+=head1 VERSION
+
+version 0.0987
+
+=head1 SYNOPSIS
+
+    use XML::MyXML qw(tidy_xml xml_to_object);
+    use XML::MyXML qw(:all);
+
+    my $xml = "<item><name>Table</name><price><usd>10.00</usd><eur>8.50</eur></price></item>";
+    print tidy_xml($xml);
+
+    my $obj = xml_to_object($xml);
+    print "Price in Euros = " . $obj->path('price/eur')->value;
+
+    $obj->simplify is hashref { item => { name => 'Table', price => { usd => '10.00', eur => '8.50' } } }
+    $obj->simplify({ internal => 1 }) is hashref { name => 'Table', price => { usd => '10.00', eur => '8.50' } }
+
+=head1 EXPORT
+
+tidy_xml, xml_to_object, object_to_xml, simple_to_xml, xml_to_simple, check_xml
+
+=head1 FEATURES & LIMITATIONS
+
+This module can parse XML comments, CDATA sections, XML entities (the standard five and numeric ones) and simple non-recursive C<< <!ENTITY> >>s
+
+It will ignore (won't parse) C<< <!DOCTYPE...> >>, C<< <?...?> >> and other C<< <!...> >> special markup
+
+Parsed documents must be UTF-8 encoded unless an encoding is declared in the initial XML declaration <?xml ... ?> of the document. All XML documents produced by this module will be UTF-8 encoded, as will be all strings output by its functions.
+
+XML documents to be parsed may not contain the C<< > >> character unencoded in attribute values
+
+=head1 OPTIONAL FUNCTION FLAGS
+
+Some functions and methods in this module accept optional flags, listed under each function in the documentation. They are optional, default to zero unless stated otherwise, and can be used as follows: S<C<< &function_name( $param1, { flag1 => 1, flag2 => 1 } ) >>>. This is what each flag does:
+
+C<strip> : the function will strip initial and ending whitespace from all text values returned
+
+C<file> : the function will expect the path to a file containing an XML document to parse, instead of an XML string
+
+C<complete> : the function's XML output will include an XML declaration (C<< <?xml ... ?>  >>) in the beginning
+
+C<soft> : the function will return undef instead of dying in case of an error during XML parsing
+
+C<internal> : the function will only return the contents of an element in a hashref instead of the element itself (see L</SYNOPSIS> for example)
+
+C<tidy> : the function will return tidy XML
+
+C<indentstring> : when producing tidy XML, this denotes the string with which child elements will be indented (Default is the 'tab' character)
+
+C<save> : the function (apart from doing what it's supposed to do) will also save its XML output in a file whose path is denoted by this flag
+
+C<strip_ns> : strip the namespaces (characters up to and including ':') from the tags
+
+C<xslt> : will add a <?xml-stylesheet?> link in the XML that's being output, of type 'text/xsl', pointing to the filename or URL denoted by this flag
+
+C<arrayref> : the function will create a simple arrayref instead of a simple hashref (which will preserve order and elements with duplicate tags)
+
+C<utf8> : the strings which will be returned will have their utf8 flag set (defaults to 0 for compatibility with software built with older versions of this module). The way this module works is that it holds everything in byte format internally (even if you provide it with a utf8 XML string), and then produces utf8 strings or simple structures if (and only if) asked for with this flag. UTF is an important issue, please read C<perldoc utf8> for more.
+
+=head1 FUNCTIONS
+
+=head2 tidy_xml($raw_xml)
+
+Returns the XML string in a tidy format (with tabs & newlines)
+
+Optional flags: C<file>, C<complete>, C<indentstring>, C<soft>, C<save>, C<utf8>
+
+=head2 xml_to_object($raw_xml)
+
+Creates an 'XML::MyXML::Object' object from the raw XML provided
+
+Optional flags: C<file>, C<soft>
+
+=head2 object_to_xml($object)
+
+Creates an XML string from the 'XML::MyXML::Object' object provided
+
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<utf8>
+
+=head2 simple_to_xml($simple_array_ref)
+
+Produces a raw XML string from either an array reference, a hash reference or a mixed structure such as these examples:
+
+    { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } }
+    [ thing => [ name => 'John', location => [ city => 'New York', country => 'U.S.A.' ] ] ]
+    { thing => { name => 'John', location => [ city => 'New York', city => 'Boston', country => 'U.S.A.' ] } }
+
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<xslt>, C<utf8>
+
+=head2 xml_to_simple($raw_xml)
+
+Produces a very simple hash object from the raw XML string provided. An example hash object created thusly is this: S<C<< { thing => { name => 'John', location => { city => 'New York', country => 'U.S.A.' } } } >>>
+
+Since the object created is a hashref, duplicate keys will be discarded. WARNING: This function only works on very simple XML strings, i.e. children of an element may not consist of both text and elements (child elements will be discarded in that case)
+
+Optional flags: C<internal>, C<strip>, C<file>, C<soft>, C<strip_ns>, C<arrayref>, C<utf8>
+
+=head2 check_xml($raw_xml)
+
+Returns 1 if the $raw_xml string is valid XML (valid enough to be used by this module), and 0 otherwise.
+
+Optional flags: C<file>
+
+=head1 OBJECT METHODS
+
+=head2 $obj->path("subtag1/subsubtag2/.../subsubsubtagX")
+
+Returns the element specified by the path as an XML::MyXML::Object object. When there are more than one tags with the specified name in the last step of the path, it will return all of them as an array. In scalar context will only return the first one.
+
+=head2 $obj->value
+
+When the element represented by the $obj object has only text contents, returns those contents as a string. If the $obj element has no contents, value will return an empty string.
+
+Optional flags: C<strip>, C<utf8>
+
+=head2 $obj->attr('attrname')
+
+Returns the value of the 'attrname' attribute of the top element. Returns undef if attribute does not exist. If called without the 'attrname' paramter, returns a hash with all attribute => value pairs.
+
+Optional flags: C<utf8>
+
+=head2 $obj->tag
+
+Returns the tag of the $obj element (after stripping it from namespaces). E.g. if $obj represents an <rss:item> element, C<< $obj->tag >> will just return the name 'item'.
+Returns undef if $obj doesn't represent a tag.
+
+Optional flags: C<utf8>
+
+=head2 $obj->simplify
+
+Returns a very simple hashref, like the one returned with &XML::MyXML::xml_to_simple. Same restrictions and warnings apply.
+
+Optional flags: C<internal>, C<strip>, C<strip_ns>, C<arrayref>, C<utf8>
+
+=head2 $obj->to_xml
+
+Returns the XML string of the object, just like calling C<&object_to_xml( $obj )>
+
+Optional flags: C<complete>, C<tidy>, C<indentstring>, C<save>, C<utf8>
+
+=head2 $obj->to_tidy_xml
+
+Returns the XML string of the object in tidy form, just like calling C<&tidy_xml( &object_to_xml( $obj ) )>
+
+Optional flags: C<complete>, C<indentstring>, C<save>, C<utf8>
+
+=head2 $obj->delete
+
+Deletes the object and all its children from memory. This is the only way to remove an XML object from memory and clear the RAM, since children and parents refer to each other circularly.
+
+The way it works is by removing references from the object's descendants to their parents.
 
 =head1 BUGS
 
-Please report any bugs or feature requests to
+If you don't have a Github account to report your issues at
+L<https://github.com/akarelas/xml-myxml/issues>,
+then feel free to report any bugs or feature requests to
 C<bug-xml-myxml at rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=XML-MyXML>.
 I will be notified, and then you'll automatically be notified of progress on
 your bug as I make changes.
 
-=head1 SUPPORT
+=head1 AUTHOR
 
-You can find documentation for this module with the perldoc command.
+Alexander Karelas <karjala@cpan.org>
 
-    perldoc XML::MyXML
+=head1 COPYRIGHT AND LICENSE
 
-You can also look for information at:
+This software is copyright (c) 2013 by Alexander Karelas.
 
-=over 4
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/XML-MyXML>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/XML-MyXML>
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=XML-MyXML>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/XML-MyXML>
-
-=item * Module's RSS feed
-
-L<http://myperl.eu/permodule/XML-MyXML>
-
-=back
-
-=head1 ACKNOWLEDGEMENTS
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright 2006-2007 Alexander Karelas, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-1; # End of XML::MyXML
