@@ -20,7 +20,7 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "XML::MyXML",
   "PREREQ_PM" => {},
-  "VERSION" => "0.0987",
+  "VERSION" => "0.0988",
   "test" => {
     "TESTS" => ""
   }

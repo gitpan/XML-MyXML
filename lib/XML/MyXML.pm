@@ -1,6 +1,6 @@
 package XML::MyXML;
 {
-  $XML::MyXML::VERSION = '0.0987';
+  $XML::MyXML::VERSION = '0.0988';
 }
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
 
@@ -91,9 +91,9 @@ sub xml_to_object {
 	my $soft = $flags->{'soft'}; # soft = 'don't die if can't parse, just return undef'
 
 	if ($flags->{'file'}) {
-		open FILE, $xml or do { confess "Error: The file '$xml' could not be opened for reading." unless $soft; return undef; };
-		$xml = join '', <FILE>;
-		close FILE;
+		open my $fh, $xml or do { confess "Error: The file '$xml' could not be opened for reading." unless $soft; return undef; };
+		$xml = join '', <$fh>;
+		close $fh;
 	}
 
 	my (undef, undef, $encoding) = $xml =~ /<\?xml(\s[^>]+)?\sencoding=(['"])(.*?)\2/g;
@@ -300,10 +300,10 @@ sub simple_to_xml {
 	if ($flags->{'utf8'}) { Encode::_utf8_on($xml); }
 
 	if (defined $flags->{'save'}) {
-		open FILE, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
-		if ($flags->{'utf8'}) { binmode FILE, ':utf8'; }
-		print FILE $xml;
-		close FILE;
+		open my $fh, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
+		if ($flags->{'utf8'}) { binmode $fh, ':utf8'; }
+		print $fh $xml;
+		close $fh;
 	}
 
 	return $xml;
@@ -475,7 +475,7 @@ sub check_xml {
 
 package XML::MyXML::Object;
 {
-  $XML::MyXML::Object::VERSION = '0.0987';
+  $XML::MyXML::Object::VERSION = '0.0988';
 }
 
 use Carp;
@@ -605,10 +605,10 @@ sub to_xml {
 	$xml = $decl . $xml;
 	if ($flags->{'utf8'}) { Encode::_utf8_on($xml); }
 	if (defined $flags->{'save'}) {
-		open FILE, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
-		if ($flags->{'utf8'}) { binmode FILE, ':utf8'; }
-		print FILE $xml;
-		close FILE;
+		open my $fh, ">$flags->{'save'}" or confess "Error: Couldn't open file '$flags->{'save'}' for writing";
+		if ($flags->{'utf8'}) { binmode $fh, ':utf8'; }
+		print $fh $xml;
+		close $fh;
 	}
 	return $xml;
 }
@@ -665,7 +665,7 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-version 0.0987
+version 0.0988
 
 =head1 SYNOPSIS
 

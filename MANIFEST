@@ -4,7 +4,4 @@ MANIFEST
 META.yml
 Makefile.PL
 README
-README.md
-dist.ini
 lib/XML/MyXML.pm
-weaver.ini
