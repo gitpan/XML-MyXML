@@ -2,7 +2,8 @@
 abstract: 'A simple-to-use XML module, for parsing and creating XML documents'
 author:
   - 'Alexander Karelas <karjala@cpan.org>'
-build_requires: {}
+build_requires:
+  Test::Deep: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -16,4 +17,4 @@ resources:
   bugtracker: https://github.com/akarelas/xml-myxml/issues
   homepage: https://github.com/akarelas/xml-myxml
   repository: https://github.com/akarelas/xml-myxml.git
-version: 0.0988
+version: 0.0989

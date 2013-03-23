@@ -1,0 +1,42 @@
+{
+   "abstract" : "A simple-to-use XML module, for parsing and creating XML documents",
+   "author" : [
+      "Alexander Karelas <karjala@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.300030, CPAN::Meta::Converter version 2.120921",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "XML-MyXML",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::Deep" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/akarelas/xml-myxml/issues"
+      },
+      "homepage" : "https://github.com/akarelas/xml-myxml",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/akarelas/xml-myxml.git",
+         "web" : "https://github.com/akarelas/xml-myxml"
+      }
+   },
+   "version" : "0.0989"
+}
+
