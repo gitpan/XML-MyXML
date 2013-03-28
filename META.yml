@@ -13,8 +13,16 @@ meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
 name: XML-MyXML
+requires:
+  Carp: 0
+  Encode: 0
+  Exporter: 0
+  perl: 5.008
+  strict: 0
+  utf8: 0
+  warnings: 0
 resources:
   bugtracker: https://github.com/akarelas/xml-myxml/issues
   homepage: https://github.com/akarelas/xml-myxml
   repository: https://github.com/akarelas/xml-myxml.git
-version: 0.0989
+version: 0.0990

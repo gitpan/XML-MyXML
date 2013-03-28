@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-
+use 5.008;
 
 use ExtUtils::MakeMaker 6.30;
 
@@ -21,8 +21,15 @@ my %WriteMakefileArgs = (
   "EXE_FILES" => [],
   "LICENSE" => "perl",
   "NAME" => "XML::MyXML",
-  "PREREQ_PM" => {},
-  "VERSION" => "0.0989",
+  "PREREQ_PM" => {
+    "Carp" => 0,
+    "Encode" => 0,
+    "Exporter" => 0,
+    "strict" => 0,
+    "utf8" => 0,
+    "warnings" => 0
+  },
+  "VERSION" => "0.0990",
   "test" => {
     "TESTS" => "t/*.t"
   }
