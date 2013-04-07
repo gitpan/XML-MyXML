@@ -12,7 +12,9 @@ my %WriteMakefileArgs = (
   "ABSTRACT" => "A simple-to-use XML module, for parsing and creating XML documents",
   "AUTHOR" => "Alexander Karelas <karjala\@cpan.org>",
   "BUILD_REQUIRES" => {
-    "Test::Deep" => 0
+    "File::Temp" => 0,
+    "Test::Deep" => 0,
+    "Test::More" => 0
   },
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
@@ -29,7 +31,7 @@ my %WriteMakefileArgs = (
     "utf8" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.0990",
+  "VERSION" => "0.0991",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -32,7 +32,9 @@
       },
       "test" : {
          "requires" : {
-            "Test::Deep" : "0"
+            "File::Temp" : "0",
+            "Test::Deep" : "0",
+            "Test::More" : "0"
          }
       }
    },
@@ -48,6 +50,6 @@
          "web" : "https://github.com/akarelas/xml-myxml"
       }
    },
-   "version" : "0.0990"
+   "version" : "0.0991"
 }
 
