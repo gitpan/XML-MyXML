@@ -1,6 +1,6 @@
 package XML::MyXML;
 {
-  $XML::MyXML::VERSION = '0.09921';
+  $XML::MyXML::VERSION = '0.0993';
 }
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
 
@@ -10,7 +10,7 @@ use utf8;
 use Carp;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple check_xml ent_encode);
+our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple check_xml xml_escape);
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 use Encode;
 
@@ -32,7 +32,7 @@ sub _encode {
 }
 
 
-sub ent_encode {
+sub xml_escape {
 	my ($string) = @_;
 
 	return _encode($string);
@@ -494,7 +494,7 @@ sub check_xml {
 
 package XML::MyXML::Object;
 {
-  $XML::MyXML::Object::VERSION = '0.09921';
+  $XML::MyXML::Object::VERSION = '0.0993';
 }
 
 use Carp;
@@ -753,7 +753,7 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-version 0.09921
+version 0.0993
 
 =head1 SYNOPSIS
 
@@ -813,7 +813,7 @@ C<utf8> : the strings which will be returned will have their utf8 flag set (defa
 
 =head1 FUNCTIONS
 
-=head2 ent_encode($string)
+=head2 xml_escape($string)
 
 Returns the same string, but with the C<< < >>, C<< > >>, C<< & >>, C<< " >> and C<< ' >> characters replaced by their XML entities (e.g. C<< &amp; >>).
 
