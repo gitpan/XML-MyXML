@@ -6,4 +6,6 @@ META.yml
 Makefile.PL
 README
 lib/XML/MyXML.pm
+lib/XML/MyXML/II.pm
 t/01.t
+t/02.t

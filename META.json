@@ -4,7 +4,7 @@
       "Alexander Karelas <karjala@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300030, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 4.300036, CPAN::Meta::Converter version 2.132140",
    "license" : [
       "perl_5"
    ],
@@ -24,6 +24,7 @@
             "Carp" : "0",
             "Encode" : "0",
             "Exporter" : "0",
+            "Scalar::Util" : "0",
             "perl" : "5.008",
             "strict" : "0",
             "utf8" : "0",
@@ -50,6 +51,6 @@
          "web" : "https://github.com/akarelas/xml-myxml"
       }
    },
-   "version" : "0.0993"
+   "version" : "0.1000"
 }
 
