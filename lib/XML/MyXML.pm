@@ -1,6 +1,6 @@
 package XML::MyXML;
 {
-  $XML::MyXML::VERSION = '0.1000';
+  $XML::MyXML::VERSION = '0.1001';
 }
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
 
@@ -494,7 +494,7 @@ sub check_xml {
 
 package XML::MyXML::Object;
 {
-  $XML::MyXML::Object::VERSION = '0.1000';
+  $XML::MyXML::Object::VERSION = '0.1001';
 }
 
 use Carp;
@@ -753,7 +753,7 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-version 0.1000
+version 0.1001
 
 =head1 SYNOPSIS
 
@@ -771,9 +771,9 @@ version 0.1000
 
 =head1 PLEASE USE XML::MyXML::II INSTEAD
 
-B<< *** This module will not be maintained anymore *** Please use XML::MyXML::II instead, which is also contained in this distribution *** >>
+B<< *** This module will not be maintained anymore *** Please use L<XML::MyXML::II> instead, which is also contained in this distribution *** >>
 
-It's differences are: better unicode handling.
+It's main improvements are: better unicode handling and automatic object destruction
 
 =head1 EXPORT
 
