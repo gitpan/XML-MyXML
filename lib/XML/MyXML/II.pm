@@ -1,6 +1,6 @@
 package XML::MyXML::II;
 {
-  $XML::MyXML::II::VERSION = '0.1001';
+  $XML::MyXML::II::VERSION = '0.1002';
 }
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
 
@@ -98,7 +98,7 @@ sub xml_to_object {
 	}
 
 	my (undef, undef, $encoding) = $xml =~ /<\?xml(\s[^>]+)?\sencoding=(['"])(.*?)\2/g;
-	$encoding //= 'UTF-8';
+	$encoding = 'UTF-8'		if ! defined $encoding;
 	if ($encoding =~ /^utf-?8$/i) { $encoding = 'UTF-8'; }
 	eval {
 		$xml = decode($encoding, $xml, Encode::FB_CROAK);
@@ -467,7 +467,7 @@ sub check_xml {
 
 package XML::MyXML::II::Object;
 {
-  $XML::MyXML::II::Object::VERSION = '0.1001';
+  $XML::MyXML::II::Object::VERSION = '0.1002';
 }
 
 use Carp;
@@ -685,7 +685,7 @@ XML::MyXML::II - A simple-to-use XML module, for parsing and creating XML docume
 
 =head1 VERSION
 
-version 0.1001
+version 0.1002
 
 =head1 SYNOPSIS
 
