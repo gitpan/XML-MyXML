@@ -1,6 +1,6 @@
 package XML::MyXML;
 {
-  $XML::MyXML::VERSION = '0.1002';
+  $XML::MyXML::VERSION = '0.1003';
 }
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
 
@@ -13,6 +13,8 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(tidy_xml object_to_xml xml_to_object simple_to_xml xml_to_simple check_xml xml_escape);
 our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 use Encode;
+
+warn "WARNING: Your program is using XML::MyXML, which is deprecated. Development on this module has stopped, and the module will be removed from future CPAN releases on January 1st, 2016. Please start using XML::MyXML::II as soon as possible instead, which you have installed on your system. Please also make sure you read https://metacpan.org/pod/XML::MyXML::II#DIFFERENCES-FROM-XML::MyXML to see the few differences between XML::MyXML and XML::MyXML::II";
 
 
 sub _encode {
@@ -494,7 +496,7 @@ sub check_xml {
 
 package XML::MyXML::Object;
 {
-  $XML::MyXML::Object::VERSION = '0.1002';
+  $XML::MyXML::Object::VERSION = '0.1003';
 }
 
 use Carp;
@@ -753,7 +755,7 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-version 0.1002
+version 0.1003
 
 =head1 SYNOPSIS
 
