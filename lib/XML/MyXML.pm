@@ -1,6 +1,6 @@
 package XML::MyXML;
 {
-  $XML::MyXML::VERSION = '0.9000';
+  $XML::MyXML::VERSION = '0.9001';
 }
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
 
@@ -43,14 +43,13 @@ sub _decode {
 	my $entities = shift || {};
 	my $flags = shift || {};
 	defined $string or $string = '';
-	my %replace = reverse (
-					(reverse (%$entities)),
+	my %replace = ( %$entities, reverse(
 					'<' => '&lt;',
 					'>' => '&gt;',
 					'&' => '&amp;',
 					'\'' => '&apos;',
 					'"' => '&quot;',
-	);
+	));
 	my @capture = map "\Q$_\E", keys %replace;
 	push @capture, '&#x[0-9A-Fa-f]+;', '&#[0-9]+;';
 	my $capture = "(".join("|", @capture).")";
@@ -481,7 +480,7 @@ sub check_xml {
 
 package XML::MyXML::Object;
 {
-  $XML::MyXML::Object::VERSION = '0.9000';
+  $XML::MyXML::Object::VERSION = '0.9001';
 }
 
 use Carp;
@@ -699,7 +698,7 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-version 0.9000
+version 0.9001
 
 =head1 SYNOPSIS
 
