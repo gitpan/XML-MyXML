@@ -10,7 +10,7 @@ use ExtUtils::MakeMaker 6.30;
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "A simple-to-use XML module, for parsing and creating XML documents",
-  "AUTHOR" => "Alexander Karelas <karjala\@cpan.org>",
+  "AUTHOR" => "Alexander Karelas <karjala\@karjala.org>",
   "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
@@ -33,7 +33,7 @@ my %WriteMakefileArgs = (
     "Test::Deep" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.9001",
+  "VERSION" => "0.9002",
   "test" => {
     "TESTS" => "t/*.t"
   }

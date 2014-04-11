@@ -1,11 +1,11 @@
 
 
 This archive contains the distribution XML-MyXML,
-version 0.9001:
+version 0.9002:
 
   A simple-to-use XML module, for parsing and creating XML documents
 
-This software is copyright (c) 2013 by Alexander Karelas.
+This software is copyright (c) 2014 by Alexander Karelas.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
