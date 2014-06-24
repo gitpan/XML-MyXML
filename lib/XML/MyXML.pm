@@ -1,6 +1,6 @@
 package XML::MyXML;
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
-$XML::MyXML::VERSION = '0.9004';
+$XML::MyXML::VERSION = '0.9005';
 use strict;
 use warnings;
 use Carp;
@@ -476,7 +476,7 @@ sub check_xml {
 
 
 package XML::MyXML::Object;
-$XML::MyXML::Object::VERSION = '0.9004';
+$XML::MyXML::Object::VERSION = '0.9005';
 use Carp;
 use Encode;
 
@@ -562,16 +562,15 @@ sub path {
 		}
 	}
 
-	my $el = $self;
+	my @result = ($self);
 	if ($start_root) {
-		$el->cmp_element(shift @path)	or return;
+		$self->cmp_element(shift @path)		or return;
 	}
-	for (my $i = 0; $i < $#path; $i++) {
-		my $pathstep = $path[$i];
-		($el) = $el->children($pathstep);
-		if (! defined $el) { return; }
+	for (my $i = 0; $i <= $#path; $i++) {
+		@result = $result[0]->children( $path[$i] );
+		@result		or return;
 	}
-	return wantarray ? $el->children($path[$#path]) : ($el->children($path[$#path]))[0];
+	return wantarray ? @result : $result[0];
 }
 
 
@@ -696,7 +695,7 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-version 0.9004
+version 0.9005
 
 =head1 SYNOPSIS
 
