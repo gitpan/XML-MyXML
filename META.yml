@@ -4,7 +4,6 @@ author:
   - 'Alexander Karelas <karjala@karjala.org>'
 build_requires:
   File::Temp: 0
-  Test::Deep: 0
   Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
@@ -28,4 +27,4 @@ resources:
   bugtracker: https://github.com/akarelas/xml-myxml/issues
   homepage: https://github.com/akarelas/xml-myxml
   repository: https://github.com/akarelas/xml-myxml.git
-version: 0.9005
+version: 0.9006

@@ -1,6 +1,6 @@
 package XML::MyXML;
 # ABSTRACT: A simple-to-use XML module, for parsing and creating XML documents
-$XML::MyXML::VERSION = '0.9005';
+$XML::MyXML::VERSION = '0.9006';
 use strict;
 use warnings;
 use Carp;
@@ -476,7 +476,7 @@ sub check_xml {
 
 
 package XML::MyXML::Object;
-$XML::MyXML::Object::VERSION = '0.9005';
+$XML::MyXML::Object::VERSION = '0.9006';
 use Carp;
 use Encode;
 
@@ -695,7 +695,7 @@ XML::MyXML - A simple-to-use XML module, for parsing and creating XML documents
 
 =head1 VERSION
 
-version 0.9005
+version 0.9006
 
 =head1 SYNOPSIS
 

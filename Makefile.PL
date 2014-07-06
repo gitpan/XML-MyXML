@@ -31,10 +31,9 @@ my %WriteMakefileArgs = (
   },
   "TEST_REQUIRES" => {
     "File::Temp" => 0,
-    "Test::Deep" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.9005",
+  "VERSION" => "0.9006",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -47,7 +46,6 @@ my %FallbackPrereqs = (
   "Exporter" => 0,
   "File::Temp" => 0,
   "Scalar::Util" => 0,
-  "Test::Deep" => 0,
   "Test::More" => 0,
   "strict" => 0,
   "utf8" => 0,
